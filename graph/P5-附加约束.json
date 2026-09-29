@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "name": "P5 附加约束（执行证伪发现的负载约束 + P4 容量规则）",
+    "note": "与约束图同 schema；由 --sampler-graph 逗号分隔一起加载。LOAD-1 来自 S2 执行发现（Vidur vllm(V0) 语义），其真实引擎对应物为 C042/C160（config/scheduler.py:296）；CAP-1 为 KV 块池容量规则，证据为 vLLM v0.30.0 真实源码行（2026-09-27 补全）。",
+    "generated_at": "2026-09-27"
+  },
+  "nodes": [
+    {
+      "id": "LOAD-1",
+      "type": "inequality",
+      "expr": "max_num_batched_tokens >= 1024",
+      "params": [
+        "max_num_batched_tokens"
+      ],
+      "scope": "scheduler",
+      "severity": "error",
+      "mechanism": "mtib 必须 ≥ 请求最大 prefill（1024 tokens），否则请求无法调度（队列饿死）。S2 在 Vidur vllm(V0) 语义下执行发现并验证（1,800 次仿真）；真实 vLLM 的对应规则是 R3：未开 chunked prefill 时 mtib ≥ max_model_len（config/scheduler.py:297，即约束图 C042/C160）。",
+      "evidence": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 297,
+          "snippet": "self.max_num_batched_tokens < max_model_len"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 309,
+          "snippet": "if self.max_num_batched_tokens < self.max_num_seqs:"
+        }
+      ],
+      "validation": {
+        "status": "confirmed",
+        "method": "execution",
+        "run_id": "S2-load-discovery",
+        "note": "Vidur 负载约束（V0 语义）；vLLM 对应规则见 C042/C160（已执行证伪）（仿真负载派生下界；对应真实引擎规则见 C042/C160，已执行证伪）"
+      },
+      "extraction": {
+        "source": "execution-discovery",
+        "candidate_kind": "load-constraint",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "CAP-1",
+      "type": "inequality",
+      "expr": "num_blocks >= 64 * max_num_seqs",
+      "general_expr": "num_blocks >= ceil(max_model_len / block_size) * max_num_seqs",
+      "params": [
+        "num_blocks",
+        "max_num_seqs"
+      ],
+      "scope": "kv_cache",
+      "severity": "warning",
+      "mechanism": "KV 块池必须容纳并发满长请求：max concurrency = num_blocks / blocks_per_request（kv_cache_utils.py:1094），其中 blocks_per_request = cdiv(max_memory_usage_bytes, page_size_bytes) = ceil(max_model_len / block_size)（常规单 group KV）。取并发上限 C = max_num_seqs 即得 num_blocks ≥ ceil(max_model_len/block_size) × max_num_seqs；否则并发满时触发抢占（preemption）。num_blocks 可由 --num-gpu-blocks-override 显式设置（cache.py:124）。本实验参数：max_model_len=1024、block_size=16 → 64 块/序列。",
+      "evidence": [
+        {
+          "file": "vllm/v1/core/kv_cache_utils.py",
+          "line": 1094,
+          "snippet": "limits = [kv_cache_config.num_blocks / num_blocks_per_request]"
+        },
+        {
+          "file": "vllm/v1/core/kv_cache_utils.py",
+          "line": 1750,
+          "snippet": "num_blocks = available_memory // bytes_per_block"
+        },
+        {
+          "file": "vllm/config/cache.py",
+          "line": 124,
+          "snippet": "num_gpu_blocks_override: int | None = None"
+        }
+      ],
+      "validation": {
+        "status": "confirmed",
+        "method": "simulation",
+        "run_id": "P4-capacity-rule",
+        "note": "容量/性能规则（非合法性约束）：仿真验证（Vidur 6D 空间），非引擎执行；无引擎报错语义，违反后果为抢占。"
+      },
+      "extraction": {
+        "source": "capacity-rule",
+        "candidate_kind": "arithmetic-capacity",
+        "confidence": "high"
+      }
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "engine": "vllm-0.30.0",
+  "scoot_source": "SCOOT 附录 A.2（vLLM-0.4.2/0.5.5 的人工约束）",
+  "tests": [
+    {
+      "test": "SCOOT#1 违反: mtib(256) < mns(512)",
+      "status": "error",
+      "detail": "ValidationError: 1 validation error for SchedulerConfig\n  Value error, max_num_batched_tokens (256) must be greater than or equal to max_num_seqs (512). [type=value_error, input_value=ArgsKwargs((), {'max_num_...ncoder_decoder': False}), input_type=ArgsKwargs]\n    For further "
+    },
+    {
+      "test": "SCOOT#1 对照: mtib(4096) >= mns(128)",
+      "status": "no_error",
+      "detail": "构造成功（引擎未报错）"
+    },
+    {
+      "test": "SCOOT#2 构造 SchedulerConfig(chunked=True)",
+      "status": "no_error",
+      "detail": "构造成功（引擎未报错）"
+    },
+    {
+      "test": "SCOOT#2 构造 CacheConfig(prefix=True)",
+      "status": "no_error",
+      "detail": "构造成功（引擎未报错）"
+    },
+    {
+      "test": "SCOOT#2 组合: chunked=True 且 prefix=True 同时装入 VllmConfig",
+      "status": "no_error",
+      "detail": "组合构造成功 → 两特性在 v0.30.0 可共存（旧约束已失效）"
+    },
+    {
+      "test": "SCOOT#3 违反: chunked=False 且 mtib(默认 2048) < max_model_len(4096)",
+      "status": "error",
+      "detail": "ValidationError: 1 validation error for SchedulerConfig\n  Value error, max_num_batched_tokens (2048) is smaller than max_model_len (4096). This effectively limits the maximum sequence length to max_num_batched_tokens and makes vLLM reject longer sequences. Please increase max_"
+    },
+    {
+      "test": "SCOOT#3 对照: chunked=False 且 mtib(4096) >= max_model_len(4096)",
+      "status": "no_error",
+      "detail": "构造成功（引擎未报错）"
+    }
+  ],
+  "verdict": {
+    "SCOOT#1": "仍成立（v0.30.0 有同等校验；见 scheduler.py:309）",
+    "SCOOT#2": "v0.30.0 构造测试中不拒绝（两特性可共存）；但注意：v0.4.2/v0.5.5 曾有运行期守卫，属衰减而非从未成立（见 correction_2026_09_29）",
+    "SCOOT#3": "仍成立但语义条件化（仅在 chunked_prefill=False 时约束；见 scheduler.py:296-300 / arg_utils.py:2944）"
+  },
+  "note": "本测试是 Paper 2（版本漂移）的直接素材：人工约束会随版本失效或改变语义。",
+  "refinement_2026_09_27": {
+    "source": "实验记录/P2-版本研究/SCOOT规则深查.md（v0.4.2/v0.5.5 源码级复核）",
+    "R1": "跨 5 个版本（0.4.2→0.30.0）稳定存在（v0.5.5: config.py:938-942 逐字同款）",
+    "R2": "【已更正，见 correction_2026_09_29】原判词（过多依赖配置名 token 搜索）不成立：R2 是运行期守卫，v0.4.2/v0.5.5 在 prefix-cache 命中 + chunked prefill 时抛 RuntimeError；v0.6.6+ 被上游移除。",
+    "R3": "修正：条件式语义在 v0.5.5 就存在（config.py:927-936），非'语义变化'；变化在默认值（V1 默认开 chunked prefill）→ 实际约束力显著下降",
+    "verdict_refined": {
+      "SCOOT#1": "跨 5 版本稳定",
+      "SCOOT#2": "更正（2026-09-29）：锚定版本中是运行时守卫（v0.4.2 :254-258 / v0.5.5 :502-504），v0.6.6+ 移除 → 属“约束随版本衰减”，而非“从未成立”；构造式验证无法观察运行期守卫。",
+      "SCOOT#3": "语义一致；因默认值变化而失去实际约束力"
+    }
+  },
+  "correction_2026_09_29": {
+    "trigger": "TSE 审稿模拟（配置分析方向）复核 + 本地源码复核：原 token 搜索漏检（守卫触发用运行期变量 prefix_cache_hit，消息中无配置字段名）",
+    "R2_corrected": "v0.4.2 worker/model_runner.py:254-258 — RuntimeError(\"chunked prefill cannot be used with prefix caching now.\")；v0.5.5 :502-504 同款；触发条件为运行期 prefix-cache 命中（非配置期可构造）",
+    "v0_6_6_plus": "主 runner 已无此守卫（上游加入两特性共存支持）",
+    "narrative": "正确叙事：R2 = 衰减（运行时守卫被移除），非“过度断言/从未成立”；同时说明构造式执行验证的边界——构造路径看不到运行期守卫。",
+    "affected_artifacts": [
+      "论文/latex/main.tex（已同步）",
+      "论文/Paper1-draft-v2.md（已同步）",
+      "实验记录/P2-版本研究/SCOOT规则深查.md（已同步）"
+    ]
+  }
+}

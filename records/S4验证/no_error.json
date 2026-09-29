@@ -1,0 +1,915 @@
+{
+  "stats": {
+    "no_error": 22
+  },
+  "constraints": [
+    {
+      "type": "implication",
+      "expr": "(data_parallel_size > 1 and data_parallel_external_lb) implies model_config.is_moe",
+      "params": [
+        "data_parallel_size",
+        "data_parallel_external_lb",
+        "model_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "外部 LB 的多 DP 实例只有 MoE 模型支持（专家并行才有多实例价值），dense 模型会被拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2234,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2230,
+          "snippet": "self.data_parallel_size > 1"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2231,
+          "snippet": "and data_parallel_external_lb"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2232,
+          "snippet": "and not model_config.is_moe"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C022",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.262284+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "0 <= node_rank < nnodes",
+      "params": [
+        "node_rank",
+        "nnodes"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "多机启动时 --node-rank 是本节点在 DP 集群中的零基序号，必须落在 [0, nnodes)。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2198,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2197,
+          "snippet": "if not 0 <= self.node_rank < self.nnodes:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C023",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.327623+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "default_mm_loras is non-empty implies model_config is multimodal",
+      "params": [
+        "default_mm_loras",
+        "model_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "多模态专用默认 LoRA 只能用于多模态模型，纯文本模型给出该参数会被拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2453,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2452,
+          "snippet": "if not model_config.is_multimodal_model and self.default_mm_loras:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C029",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:LoRAConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.388811+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "arithmetic",
+      "expr": "nnodes > 1 implies (data_parallel_size * pipeline_parallel_size * tensor_parallel_size * prefill_context_parallel_size) % nnodes == 0",
+      "params": [
+        "data_parallel_size",
+        "pipeline_parallel_size",
+        "tensor_parallel_size",
+        "prefill_context_parallel_size",
+        "nnodes"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "多机 DP 把全局 world size（DP×PP×TP×PCP）按 nnodes 均分到各节点，不能整除时报错。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2190,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2188,
+          "snippet": "world_size = self.data_parallel_size * world_size_within_dp"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2189,
+          "snippet": "if world_size % self.nnodes != 0:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C035",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.580735+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "nnodes > 1 implies data_parallel_backend == \"mp\"",
+      "params": [
+        "nnodes",
+        "data_parallel_backend"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "多机 DP 目前只支持 mp（multiprocessing）数据并行后端，nnodes>1 配 ray 会被拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2174,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2173,
+          "snippet": "if self.nnodes > 1 and self.data_parallel_backend != \"mp\":"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C036",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.581177+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (attention_backend is not None and attention_config.backend is not None)",
+      "params": [
+        "attention_backend",
+        "attention_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "顶层 --attention-backend 与 --attention-config.backend 是同一字段的两种写法，不能同时指定。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2496,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2494,
+          "snippet": "if self.attention_backend is not None:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2495,
+          "snippet": "if attention_config.backend is not None:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C037",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.581372+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (cudagraph_capture_sizes is not None and compilation_config.cudagraph_capture_sizes is not None)",
+      "params": [
+        "cudagraph_capture_sizes",
+        "compilation_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "顶层 --cudagraph-capture-sizes 与 --compilation-config.cudagraph_capture_sizes 互斥（同一字段两种写法）。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2600,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2598,
+          "snippet": "if self.cudagraph_capture_sizes is not None:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2599,
+          "snippet": "if compilation_config.cudagraph_capture_sizes is not None:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C038",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.624871+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (enable_flashinfer_autotune is not None and kernel_config.enable_flashinfer_autotune is not None)",
+      "params": [
+        "enable_flashinfer_autotune",
+        "kernel_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "顶层 --enable-flashinfer-autotune 与 --kernel-config.enable_flashinfer_autotune 是同一开关的两种写法，不能同时指定。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2554,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2552,
+          "snippet": "if self.enable_flashinfer_autotune is not None:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2553,
+          "snippet": "if kernel_config.enable_flashinfer_autotune is not None:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C040",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.681108+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (max_cudagraph_capture_size is not None and compilation_config.max_cudagraph_capture_size is not None)",
+      "params": [
+        "max_cudagraph_capture_size",
+        "compilation_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "顶层 --max-cudagraph-capture-size 与 --compilation-config.max_cudagraph_capture_size 互斥。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2607,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2605,
+          "snippet": "if self.max_cudagraph_capture_size is not None:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2606,
+          "snippet": "if compilation_config.max_cudagraph_capture_size is not None:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C041",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.740574+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "set(ir_op_priority set ops) intersection set(kernel_config.ir_op_priority set ops) == empty",
+      "params": [
+        "ir_op_priority",
+        "kernel_config"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "同一算子的优先级不能在顶层 ir_op_priority 与 KernelConfig.ir_op_priority 两处同时设置。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2575,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2568,
+          "snippet": "for op_name, op_priority in asdict(self.ir_op_priority).items():"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2574,
+          "snippet": "if getattr(kernel_config.ir_op_priority, op_name):"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.8
+      },
+      "id": "C043",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.795067+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "moe_backend ∈ {flashinfer_moe_ep_mega_deep_gemm, flashinfer_moe_ep_mega_cutedsl} → architectures ∩ {DeepseekV4ForCausalLM, DeepSeekV4MTPModel, DeepseekV41ForCausalLM} ≠ ∅",
+      "params": [
+        "moe_backend",
+        "architectures"
+      ],
+      "scope": "kernel",
+      "severity": "error",
+      "mechanism": "flashinfer moe_ep 系列 backend 只有 DeepSeek-V4 系模型代码接入了对应专家路径，其他架构使用会缺 kernel 绑定。",
+      "evidence": [
+        {
+          "file": "vllm/config/kernel.py",
+          "line": 191,
+          "snippet": "if moe_backend not in FLASHINFER_MOE_EP_BACKENDS:"
+        },
+        {
+          "file": "vllm/config/kernel.py",
+          "line": 193,
+          "snippet": "if not any(arch in FLASHINFER_MOE_EP_ARCHITECTURES for arch in architectures):"
+        },
+        {
+          "file": "vllm/config/kernel.py",
+          "line": 194,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C050",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:KernelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:47.911453+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_cumem_allocator == True ⇒ 平台支持 cumem allocator",
+      "params": [
+        "enable_cumem_allocator"
+      ],
+      "scope": "model",
+      "severity": "warning",
+      "mechanism": "cumem allocator 仅 cuda/hip 平台可用，其他平台显式开启会报错；平台能力非白名单参数，故保守标 warning。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 624,
+          "snippet": "and not current_platform.is_cumem_allocator_available()"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 626,
+          "snippet": "raise ValueError(\"cumem allocator is not supported on current platform.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.5
+      },
+      "id": "C075",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:49.322782+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_sleep_mode == True ⇒ 平台支持 sleep mode；且 CUDA/ROCm 平台上 enable_cumem_allocator 会被自动置 True",
+      "params": [
+        "enable_sleep_mode",
+        "enable_cumem_allocator"
+      ],
+      "scope": "model",
+      "severity": "warning",
+      "mechanism": "sleep mode 需要平台能力支持；CUDA 类似平台上 vLLM 会自动开启 enable_cumem_allocator（sleep mode 依赖 cumem allocator），因此该参数组合受平台约束而非纯参数关系。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 614,
+          "snippet": "if self.enable_sleep_mode:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 616,
+          "snippet": "raise ValueError(\"Sleep mode is not supported on current platform.\")"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 617,
+          "snippet": "if current_platform.is_cuda_alike() and not self.enable_cumem_allocator:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 621,
+          "snippet": "self.enable_cumem_allocator = True"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.5
+      },
+      "id": "C076",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:49.549794+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "isinstance(max_model_len, int) 且 max_model_len >= 1",
+      "params": [
+        "max_model_len"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "max_model_len 必须是正整数（字段本身未设 gt 约束，此校验兜底）。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 948,
+          "snippet": "if not isinstance(self.max_model_len, int) or self.max_model_len < 1:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 949,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C077",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:49.666715+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "device_type == \"cpu\"（CpuPlatform 生效时）",
+      "params": [
+        "device_type"
+      ],
+      "scope": "platform",
+      "severity": "error",
+      "mechanism": "走 CPU 平台时 DeviceConfig.device_type 必须为 'cpu'，该断言保证平台选择与 --device 配置一致，否则说明平台探测与用户配置矛盾。",
+      "evidence": [
+        {
+          "file": "vllm/platforms/cpu.py",
+          "line": 379,
+          "snippet": "assert vllm_config.device_config.device_type == \"cpu\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.7
+      },
+      "id": "C132",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:DeviceConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.713369+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "max_num_batched_tokens <= max_num_seqs * max_model_len（超出仅告警）",
+      "params": [
+        "max_num_batched_tokens",
+        "max_num_seqs",
+        "max_model_len"
+      ],
+      "scope": "scheduler",
+      "severity": "warning",
+      "mechanism": "token 预算超过 max_num_seqs*max_model_len 时不报错，但每个序列的理论上限之和已溢出，属于不合理配置，vLLM 会给 warning。",
+      "evidence": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 316,
+          "snippet": "if self.max_num_batched_tokens > self.max_num_seqs * max_model_len:"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 317,
+          "snippet": "logger.warning("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C159",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.715100+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "num_speculative_tokens is not None 或可由 draft n_predict / suffix 默认补齐（否则报错）",
+      "params": [
+        "num_speculative_tokens",
+        "model",
+        "draft_model_config"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "投机解码必须最终确定 num_speculative_tokens：由用户提供、draft 配置的 n_predict 推导或 suffix 方法按树深默认；全无则报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1784,
+          "snippet": "if self.num_speculative_tokens is None:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1785,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C189",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.883877+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "(enable_dbo == True or ubatch_size > 1) implies parallel_config.all2all_backend in {'deepep_low_latency','deepep_high_throughput','nixl_ep'}",
+      "params": [
+        "enable_dbo",
+        "ubatch_size",
+        "all2all_backend"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "微批处理/DBO（use_ubatching）只支持 deepep_low_latency、deepep_high_throughput、nixl_ep 三种 all2all 后端。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1934,
+          "snippet": "if self.parallel_config.use_ubatching:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1936,
+          "snippet": "assert a2a_backend in ["
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1937,
+          "snippet": "\"deepep_low_latency\","
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C222",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.892026+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "all(x > 0 for x in compilation_config.compile_ranges_endpoints)",
+      "params": [
+        "compile_ranges_endpoints"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "编译区间端点必须是正整数。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2521,
+          "snippet": "for x in compilation_config.compile_ranges_endpoints:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2523,
+          "snippet": "assert x > 0, f\"Invalid compile range endpoint: {x}\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C225",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:CompilationConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.892206+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "cache_config.mamba_block_size is not None and mamba_block_size != model_config.max_model_len implies cache_config.enable_prefix_caching == True",
+      "params": [
+        "mamba_block_size",
+        "enable_prefix_caching"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "显式设置 mamba_block_size（且不同于 max_model_len）时必须开启 prefix caching。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3202,
+          "snippet": "and self.cache_config.mamba_block_size != self.model_config.max_model_len"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3204,
+          "snippet": "if mamba_block_size_is_set and not self.cache_config.enable_prefix_caching:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3206,
+          "snippet": "\"--mamba-block-size can only be set with --enable-prefix-caching\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C235",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:CacheConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.957960+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "cache_config.use_replayssm == True implies model_config.supports_replayssm == True",
+      "params": [
+        "use_replayssm"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "--use-replayssm 需要模型（架构）声明支持 replayssm。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3212,
+          "snippet": "if not self.cache_config.use_replayssm:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3217,
+          "snippet": "if self.model_config is not None and not self.model_config.supports_replayssm:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3219,
+          "snippet": "\"--use-replayssm is not supported for architecture \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.8
+      },
+      "id": "C248",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:CacheConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:51.958093+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "observability_config.per_request_spec_decode_metrics != 'none' implies speculative_config != None",
+      "params": [
+        "per_request_spec_decode_metrics",
+        "speculative_config"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "--per-request-spec-decode-metrics 需要先启用投机解码。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1515,
+          "snippet": "self.observability_config.per_request_spec_decode_metrics != \"none\""
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1516,
+          "snippet": "and self.speculative_config is None"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1519,
+          "snippet": "\"--per-request-spec-decode-metrics requires speculative decoding \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C261",
+      "validation": {
+        "status": "no_error",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ObservabilityConfig",
+        "observed": "constructed_ok",
+        "run_at": "2026-09-26T06:37:52.438587+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    }
+  ]
+}

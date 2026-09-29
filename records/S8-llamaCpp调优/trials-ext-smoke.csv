@@ -1,0 +1,9 @@
+﻿arm,seed,trial,threads,batch,ubatch,fa,ctk,ctv,pp_256_ts,tg_16_ts,status,cost_units,error,model,s_learned
+N,99,0,4,256,256,off,f16,q8_0,,,failed,4.0,.5.0/llama-b11194/libggml-cpu-haswell.so llama_bench: error: failed to create context with model '/home/administrator/models/qwen2.5-1.5b-instruct-q4_k_m.gguf' ,1.5b,
+M,99,0,4,256,256,off,f16,q8_0,,,failed,4.0,.5.0/llama-b11194/libggml-cpu-haswell.so llama_bench: error: failed to create context with model '/home/administrator/models/qwen2.5-1.5b-instruct-q4_k_m.gguf' ,1.5b,
+A,99,0,4,256,256,on,f16,q8_0,47.281,7.689,ok,1.0,,1.5b,
+S,99,0,4,256,256,off,f16,q8_0,,,failed,4.0,.5.0/llama-b11194/libggml-cpu-haswell.so llama_bench: error: failed to create context with model '/home/administrator/models/qwen2.5-1.5b-instruct-q4_k_m.gguf' ,1.5b,1
+N,99,1,3,256,256,on,f16,f16,46.409,10.222,ok,1.0,,1.5b,
+M,99,1,3,256,256,on,f16,f16,46.515,10.754,ok,1.0,,1.5b,
+A,99,1,3,256,256,on,f16,f16,45.627,10.737,ok,1.0,,1.5b,
+S,99,1,3,256,256,on,f16,f16,46.174,10.676,ok,1.0,,1.5b,1

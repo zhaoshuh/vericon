@@ -1,0 +1,42 @@
+{
+  "engine": "vllm-0.10.0（中间版本执行点）",
+  "method": "构造违反配置 → 真实配置校验路径 → 捕获报错",
+  "results": [
+    {
+      "case": "R1 违反: mtib(2048) < mns(4096)（max_model_len=2048 使 R3 通过）",
+      "status": "error",
+      "detail": "ValidationError: 1 validation error for SchedulerConfig\n  Value error, max_num_batched_tokens (2048) must be greater than or equal to max_num_seqs (4096). [type=value_error, input_value=ArgsKwargs((), {'max_num_... 'max_model_len': 2048}), input_type=ArgsKwargs]\n    For further information visit https://errors.pydan"
+    },
+    {
+      "case": "R1 对照: mtib(4096) >= mns(128)",
+      "status": "no_error",
+      "detail": "构造成功（未报错）"
+    },
+    {
+      "case": "R2a: SchedulerConfig(chunked=True)",
+      "status": "no_error",
+      "detail": "构造成功（未报错）"
+    },
+    {
+      "case": "R2b: CacheConfig(prefix=True)",
+      "status": "no_error",
+      "detail": "构造成功（未报错）"
+    },
+    {
+      "case": "R2c: EngineArgs(chunked=True, prefix=True) 构造",
+      "status": "no_error",
+      "detail": "构造成功（未报错）"
+    },
+    {
+      "case": "R3 违反: chunked=False 且 mtib(2048) < max_model_len(4096)",
+      "status": "error",
+      "detail": "ValidationError: 1 validation error for SchedulerConfig\n  Value error, max_num_batched_tokens (2048) is smaller than max_model_len (4096). This effectively limits the maximum sequence length to max_num_batched_tokens and makes vLLM reject longer sequences. Please increase max_num_batched_tokens or decrease max_model"
+    },
+    {
+      "case": "R3 对照: chunked=False 且 mtib(4096) >= max_model_len(4096)",
+      "status": "no_error",
+      "detail": "构造成功（未报错）"
+    }
+  ],
+  "generated_at": "2026-09-27T12:25:26.209110+00:00"
+}

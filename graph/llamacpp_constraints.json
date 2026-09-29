@@ -1,0 +1,271 @@
+{
+  "engine": "llama.cpp 0.5.0-dev build 11194 (commit 9f70b2cec)",
+  "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+  "method": "构造违反参数 → 运行 llama-cli → 捕获 exit code / stderr",
+  "results": [
+    {
+      "case": "L1 违反: n_ubatch(256) > n_batch(128)",
+      "constraint_id": "L1",
+      "expected_violation": true,
+      "args": [
+        "-b",
+        "128",
+        "-ub",
+        "256"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.32,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L1 对照: n_ubatch(128) <= n_batch(256)",
+      "constraint_id": "L1",
+      "expected_violation": false,
+      "args": [
+        "-b",
+        "256",
+        "-ub",
+        "128"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.32,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L1 边界: n_ubatch == n_batch == 256",
+      "constraint_id": "L1",
+      "expected_violation": false,
+      "args": [
+        "-b",
+        "256",
+        "-ub",
+        "256"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 6.03,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L2 违反: keep(512) > ctx(256)",
+      "constraint_id": "L2",
+      "expected_violation": true,
+      "args": [
+        "-c",
+        "256",
+        "--keep",
+        "512"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 4.88,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L2 对照: keep(128) <= ctx(512)",
+      "constraint_id": "L2",
+      "expected_violation": false,
+      "args": [
+        "-c",
+        "512",
+        "--keep",
+        "128"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.09,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L4 违反: n_batch = 0",
+      "constraint_id": "L4",
+      "expected_violation": true,
+      "args": [
+        "-b",
+        "0"
+      ],
+      "exit_code": -6,
+      "status": "confirmed",
+      "wall_s": 1.16,
+      "stderr_tail": "t_from_paramsR13common_paramsb+0x4c) [0x7769a9b3d56c]\n/mnt/f/文献/AgentOps/代码/third_party/llama-bin-v0.5.0/llama-b11194/libllama-server-impl.so(_ZN19server_context_impl10load_modelER13common_params+0x69b) [0x7769a9f65dbb]\n/mnt/f/文献/AgentOps/代码/third_party/llama-bin-v0.5.0/llama-b11194/libllama-server-impl.so(_Z12llama_serverR13common_paramsiPPc+0x4423) [0x7769a9eaee13]\n/mnt/f/文献/AgentOps/代码/third_party/llama-bin-v0.5.0/llama-b11194/libllama-cli-impl.so(_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJZN10cli_server5startER13common_paramsEUlvE_EEEEE6_M_runEv+0x15) [0x7769ab4a5a35]\n/home/administrator/.venvs/agentops-py311/lib/libstdc++.so.6(+0xf5b86) [0x7769aa8f5b86]\n/usr/lib/x86_64-linux-gnu/libc.so.6(+0xa40da) [0x7769aa4a40da]\n/usr/lib/x86_64-linux-gnu/libc.so.6(+0x1377ac) [0x7769aa5377ac]\n",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L4 违反: n_ubatch = 0",
+      "constraint_id": "L4",
+      "expected_violation": true,
+      "args": [
+        "-ub",
+        "0"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.31,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L4 违反: threads = 0",
+      "constraint_id": "L4",
+      "expected_violation": true,
+      "args": [
+        "-t",
+        "0"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 6.23,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L4 对照: threads = 2",
+      "constraint_id": "L4",
+      "expected_violation": false,
+      "args": [
+        "-t",
+        "2"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.3,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L6 组合: flash-attn=on + KV q8_0",
+      "constraint_id": "L6",
+      "expected_violation": null,
+      "args": [
+        "-fa",
+        "on",
+        "-ctk",
+        "q8_0",
+        "-ctv",
+        "q8_0"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.1,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L6 组合: flash-attn=off + KV q8_0",
+      "constraint_id": "L6",
+      "expected_violation": true,
+      "args": [
+        "-fa",
+        "off",
+        "-ctk",
+        "q8_0",
+        "-ctv",
+        "q8_0"
+      ],
+      "exit_code": 1,
+      "status": "confirmed",
+      "wall_s": 4.4,
+      "stderr_tail": "h_attn to be enabled\n0.00.979.799 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to create llama_context from model\n0.04.114.361 E llama_init_from_model: quantized V cache requires flash_attn to be enabled\n0.04.114.386 E cmn  common_init_: failed to create context with model '/mnt/f/文献/AgentOps/代码/third_party/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'\n0.04.114.391 E cmn  common_init_: failed to create context with model '/mnt/f/文献/AgentOps/代码/third_party/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'\n0.04.114.398 E srv    load_model: failed to create_context with model '/mnt/f/文献/AgentOps/代码/third_party/models/qwen2.5-0.5b-instruct-q4_k_m.gguf'\n0.04.115.527 E srv  llama_server: exiting due to model loading error\nllama_server exited with code 1\n",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L6 组合: flash-attn=off + 仅 K q8_0",
+      "constraint_id": "L6",
+      "expected_violation": null,
+      "args": [
+        "-fa",
+        "off",
+        "-ctk",
+        "q8_0"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.13,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L8 违反: prompt 超过 ctx（-c 16 长 prompt）",
+      "constraint_id": "L8",
+      "expected_violation": true,
+      "args": [
+        "-c",
+        "16",
+        "-p",
+        "这是一段明显超过十六个 token 的提示文本用来测试上下文长度限制行为abcdefghijklmnopqrstuvwxyz0123456789"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.05,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L5 组合: -ngl 1（无 CUDA 构建）",
+      "constraint_id": "L5",
+      "expected_violation": null,
+      "args": [
+        "-ngl",
+        "1"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 6.04,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L1 复核: ub>b 时 verbose 日志",
+      "constraint_id": "L1",
+      "expected_violation": null,
+      "args": [
+        "-b",
+        "128",
+        "-ub",
+        "256",
+        "-lv",
+        "1"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.35,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L7 组合: load-mode=mlock（WSL/drvfs）",
+      "constraint_id": "L7",
+      "expected_violation": null,
+      "args": [
+        "-lm",
+        "mlock"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.06,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "case": "L7 对照: load-mode=auto",
+      "constraint_id": "L7",
+      "expected_violation": false,
+      "args": [
+        "-lm",
+        "auto"
+      ],
+      "exit_code": 0,
+      "status": "no_error",
+      "wall_s": 5.61,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    }
+  ]
+}

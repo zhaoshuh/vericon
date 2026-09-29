@@ -1,0 +1,76 @@
+{
+  "date": "2026-09-26T15:04:17",
+  "platform": {
+    "os": "Windows-10-10.0.19044-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 158 Stepping 9, GenuineIntel",
+    "logical_cores": 4
+  },
+  "binary": {
+    "path": "F:\\文献\\AgentOps\\llamacpp\\llama-cli.exe",
+    "version_info": "version: 0.5.0-dev (build 11146, commit 7fe450e19)\nbuilt with Clang 20.1.8 for Windows x86_64"
+  },
+  "model": {
+    "path": "F:\\文献\\AgentOps\\llamacpp\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_mb": 468.6
+  },
+  "run": {
+    "command": [
+      "F:\\文献\\AgentOps\\llamacpp\\llama-cli.exe",
+      "-m",
+      "F:\\文献\\AgentOps\\llamacpp\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "-n",
+      "32",
+      "-c",
+      "512",
+      "-t",
+      "4",
+      "-s",
+      "42",
+      "-p",
+      "你好",
+      "-st"
+    ],
+    "prompt": "你好",
+    "prompt_mode": "argv",
+    "n_predict": 32,
+    "n_ctx": 512,
+    "threads": 4,
+    "seed": 42,
+    "exit_code": 0,
+    "timed_out": false,
+    "wall_clock_s": 1.67,
+    "attempts": [
+      {
+        "mode": "argv",
+        "command": [
+          "F:\\文献\\AgentOps\\llamacpp\\llama-cli.exe",
+          "-m",
+          "F:\\文献\\AgentOps\\llamacpp\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "-n",
+          "32",
+          "-c",
+          "512",
+          "-t",
+          "4",
+          "-s",
+          "42",
+          "-p",
+          "你好",
+          "-st"
+        ],
+        "exit_code": 0,
+        "wall_clock_s": 1.67,
+        "timed_out": false
+      }
+    ]
+  },
+  "timings": {
+    "prompt_tokens_per_s": 148.5,
+    "generation_tokens_per_s": 39.2,
+    "est_decode_ms": 816.3
+  },
+  "generated_text": "你好！有什么可以帮助你的吗？",
+  "stdout_tail": "\n\nLoading model... \n\n▄▄ ▄▄\n██ ██\n██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄\n██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██\n██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀\n                                    ██    ██\n                                    ▀▀    ▀▀\n\nbuild      : b11146-7fe450e19\nmodel      : F:\\文献\\AgentOps\\llamacpp\\models\\qwen2.5-0.5b-instruct-q4_k_m.gguf\nftype      : Q4_K - Medium\nmodalities : text\n\navailable commands:\n  /exit or Ctrl+C     stop or exit\n  /regen              regenerate the last response\n  /clear              clear the chat history\n  /read <file>        add a text file\n  /glob <pattern>     add text files using globbing pattern\n\n\n\n> 你好\n你好！有什么可以帮助你的吗？\n\n[ Prompt: 148.5 t/s | Generation: 39.2 t/s ]\n\n\nExiting...\n",
+  "stderr_tail": ""
+}

@@ -1,0 +1,4521 @@
+{
+  "meta": {
+    "engine": "vllm-0.30.0",
+    "commit": "ced6857afa0ea7b2e3f0846a62e1394e90f15607",
+    "exported_at": "2026-09-26T06:42:55.470665+00:00",
+    "method": "S4 轨道A：构造违反配置 → 经 vLLM 真实配置校验路径（pydantic/dataclass 构造）→ 期望报错",
+    "note": "confirmed = 违反赋值确实被引擎拒绝；no_error = 基线可构造但违反未在构造期暴露；blocked = 运行期/依赖限制无法构造。",
+    "cross_model_note": "2026-09-27 跨模型复现（GLM-5.3-Flash）新增 34 条候选，其中 2 条（C113/C193）经 S4 执行证伪确认并入；其余 32 条经用例构造判定为运行期/请求期/环境依赖（理由见 S4验证/cases_model2.json）。",
+    "updated_at": "2026-09-27T03:06:17.718463+00:00"
+  },
+  "stats": {
+    "confirmed": 113,
+    "no_error": 22,
+    "blocked": 22,
+    "graph_total": 282,
+    "confirmed_ratio_all": 0.401,
+    "confirmed_primary": 111,
+    "cross_model_additions": 2
+  },
+  "constraints": [
+    {
+      "type": "enum",
+      "expr": "backend_per_kind.keys() ⊆ KVCacheSpecKind 取值 {full_attention, mla_attention, sliding_window, sliding_window_mla, mamba, chunked_local_attention, sink_full_attention, encoder_only_attention, cross_attention, unknown}",
+      "params": [
+        "backend_per_kind"
+      ],
+      "scope": "attention",
+      "severity": "error",
+      "mechanism": "backend_per_kind 以 KV cache group kind 为键为每类 cache 指定 attention backend，未知 kind 无法匹配到任何 cache group，直接 ValueError。",
+      "evidence": [
+        {
+          "file": "vllm/config/attention.py",
+          "line": 190,
+          "snippet": "valid_kinds = {kind.value for kind in KVCacheSpecKind}"
+        },
+        {
+          "file": "vllm/config/attention.py",
+          "line": 193,
+          "snippet": "if kind not in valid_kinds:"
+        },
+        {
+          "file": "vllm/config/attention.py",
+          "line": 194,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C001",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig attention_config.backend_per_kind   Value error, Unknown KV cache group kind '___invalid___' in backend_per_kind. Valid kinds are: chunked_local_attention, cross_attention, encoder_only_attention, full_attention, mamba, mla_attention, sink_full_attention, sliding_window, sliding_window_mla, unknown. [type=value_error, input_value={'___invalid___': 'FLASH_ATTN'}, i",
+        "run_at": "2026-09-26T06:37:03.192611+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "all(b > 0 for b in encoder_cudagraph_token_budgets)",
+      "params": [
+        "encoder_cudagraph_token_budgets"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "encoder_cudagraph_token_budgets 中每个 token 预算都必须为正数。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1066,
+          "snippet": "b <= 0 for b in self.encoder_cudagraph_token_budgets"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1069,
+          "snippet": "f\"All encoder_cudagraph_token_budgets must be positive, \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C002",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, All encoder_cudagraph_token_budgets must be positive, got [0] [type=value_error, input_value={'encoder_cudagraph_token_budgets': [0]}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:36.076023+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "compile_cache_save_format in {'binary','unpacked'}",
+      "params": [
+        "compile_cache_save_format"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "compile_cache_save_format 只允许保存编译缓存的两种格式 binary 或 unpacked，其余值直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 896,
+          "snippet": "if value not in (\"binary\", \"unpacked\"):"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 898,
+          "snippet": "f\"compile_cache_save_format must be 'binary' or 'unpacked', \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C003",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config.compile_cache_save_format   Input should be 'binary' or 'unpacked' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:44.556422+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "cudagraph_mm_encoder == True implies (encoder_cudagraph_max_frames_per_batch is None or encoder_cudagraph_max_frames_per_batch >= 0)",
+      "params": [
+        "cudagraph_mm_encoder",
+        "encoder_cudagraph_max_frames_per_batch"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "启用多模态编码器 CUDA graph 时，单批帧数上限必须为非负数或 None（自动推断）。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1057,
+          "snippet": "and self.encoder_cudagraph_max_frames_per_batch is not None"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1058,
+          "snippet": "and self.encoder_cudagraph_max_frames_per_batch < 0"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1061,
+          "snippet": "\"encoder_cudagraph_max_frames_per_batch must be \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C005",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, encoder_cudagraph_max_frames_per_batch must be non-negative (None = auto-infer) [type=value_error, input_value={'cudagraph_mm_encoder': ...x_frames_per_batch': -1}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:44.587029+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "cudagraph_mm_encoder == True implies encoder_cudagraph_max_vision_items_per_batch >= 0",
+      "params": [
+        "cudagraph_mm_encoder",
+        "encoder_cudagraph_max_vision_items_per_batch"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "启用多模态编码器 CUDA graph 时，单批 vision item 上限必须非负（0 表示自动推断）。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1049,
+          "snippet": "and self.encoder_cudagraph_max_vision_items_per_batch < 0"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1052,
+          "snippet": "\"encoder_cudagraph_max_vision_items_per_batch must be \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C006",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, encoder_cudagraph_max_vision_items_per_batch must be non-negative (0 = auto-infer) [type=value_error, input_value={'cudagraph_mm_encoder': ...on_items_per_batch': -1}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:44.618770+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "custom_ops 中不允许同一算子同时以 '+op' 与 '-op' 出现（启用与禁用互斥）",
+      "params": [
+        "custom_ops"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "custom_ops 里同一 op 不能既启用又禁用，否则抛 ValueError。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1028,
+          "snippet": "if conflicting_ops:"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1030,
+          "snippet": "\"custom_ops cannot both enable and disable the same operation(s): \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C008",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, custom_ops cannot both enable and disable the same operation(s): silu_and_mul. Remove either the '+' or '-' directive [type=value_error, input_value={'custom_ops': ['+silu_and_mul', '-silu_and_mul']}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:44.649272+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "custom_ops.count('all') + custom_ops.count('none') <= 1",
+      "params": [
+        "custom_ops"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "custom_ops 至多包含一个基模式 'all'/'none'，同时出现两个即报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1020,
+          "snippet": "if len(base_modes) > 1:"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1022,
+          "snippet": "\"custom_ops can contain only one base mode: 'all' or 'none'\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C009",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, custom_ops can contain only one base mode: 'all' or 'none' [type=value_error, input_value={'custom_ops': ['all', 'none']}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:44.678607+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "mode == VLLM_COMPILE implies backend in ('', 'eager', 'inductor')",
+      "params": [
+        "mode",
+        "backend"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "piecewise 编译只支持 eager/inductor 后端（空串会解析为平台默认后端），其他自定义 backend 与 VLLM_COMPILE 不兼容。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1037,
+          "snippet": "if self.mode == CompilationMode.VLLM_COMPILE and self.backend not in ["
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 1043,
+          "snippet": "f\"Invalid backend for piecewise compilation: {self.backend}\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C013",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config   Value error, Invalid backend for piecewise compilation: dummy_backend [type=value_error, input_value={'mode': 'VLLM_COMPILE', ...ckend': 'dummy_backend'}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:44.708239+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "mode in {'NONE','STOCK_TORCH_COMPILE','DYNAMO_TRACE_ONCE','VLLM_COMPILE'}（字符串解析时必须命中枚举成员名；也可直接给 0-3 整数）",
+      "params": [
+        "mode"
+      ],
+      "scope": "compilation",
+      "severity": "error",
+      "mechanism": "mode 字段为 before validator：字符串先 upper() 后必须在 CompilationMode.__members__ 中，否则抛 ValueError；整数走 IntEnum 校验。",
+      "evidence": [
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 868,
+          "snippet": "if mode_name not in CompilationMode.__members__:"
+        },
+        {
+          "file": "vllm/config/compilation.py",
+          "line": 870,
+          "snippet": "f\"Invalid compilation mode: {value}. \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C014",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig compilation_config.mode   Value error, Invalid compilation mode: ___invalid___. Valid modes are: NONE, STOCK_TORCH_COMPILE, DYNAMO_TRACE_ONCE, VLLM_COMPILE [type=value_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.151892+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "manager_config != {} → encoder_cache_manager_cls is not None",
+      "params": [
+        "manager_config",
+        "encoder_cache_manager_cls"
+      ],
+      "scope": "ec_manager",
+      "severity": "error",
+      "mechanism": "manager_config 是不透明字典，必须由自定义 encoder cache manager 类解析；未提供类名时该配置无消费方，故前置校验拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/config/ec_manager_config.py",
+          "line": 21,
+          "snippet": "if self.encoder_cache_manager_cls is None and self.manager_config:"
+        },
+        {
+          "file": "vllm/config/ec_manager_config.py",
+          "line": 22,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C019",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig ec_manager_config   Value error, manager_config requires encoder_cache_manager_cls to be set. [type=value_error, input_value={'manager_config': {'dummy_key': 'dummy_value'}}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.180768+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "ec_connector is not None → ec_role is not None",
+      "params": [
+        "ec_connector",
+        "ec_role"
+      ],
+      "scope": "ec_transfer",
+      "severity": "error",
+      "mechanism": "启用 EC connector 时必须声明角色，否则无法确定该实例是生产还是消费 encoder cache。",
+      "evidence": [
+        {
+          "file": "vllm/config/ec_transfer.py",
+          "line": 93,
+          "snippet": "if self.ec_connector is not None and self.ec_role is None:"
+        },
+        {
+          "file": "vllm/config/ec_transfer.py",
+          "line": 94,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C020",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig ec_transfer_config   Value error, Please specify ec_role when ec_connector is set, supported roles are ('ec_producer', 'ec_both', 'ec_consumer') [type=value_error, input_value={'ec_connector': 'ECExamp...ector', 'ec_role': None}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.206062+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "ec_role ∈ {ec_producer, ec_consumer, ec_both}",
+      "params": [
+        "ec_role"
+      ],
+      "scope": "ec_transfer",
+      "severity": "error",
+      "mechanism": "ec_role 决定实例在 encode/prefill/decode 部署中的角色，取值必须落在 ECRole 字面量集合内，否则后续 is_ec_producer/is_ec_consumer 判定失效。",
+      "evidence": [
+        {
+          "file": "vllm/config/ec_transfer.py",
+          "line": 12,
+          "snippet": "ECRole = Literal[ECProducer, ECConsumer]"
+        },
+        {
+          "file": "vllm/config/ec_transfer.py",
+          "line": 87,
+          "snippet": "if self.ec_role is not None and self.ec_role not in get_args(ECRole):"
+        },
+        {
+          "file": "vllm/config/ec_transfer.py",
+          "line": 88,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C021",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig ec_transfer_config.ec_role   Input should be 'ec_producer', 'ec_both' or 'ec_consumer' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:47.232573+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "data_parallel_backend in {\"ray\", \"mp\"}",
+      "params": [
+        "data_parallel_backend"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "DP 后端只有 ray 与 mp 两种合法取值。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2320,
+          "snippet": "assert self.data_parallel_backend == \"mp\", ("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2321,
+          "snippet": "\"data_parallel_backend can only be ray or mp, got %s\","
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C024",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig data_parallel_backend   Input should be 'ray' or 'mp' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:47.328153+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "data_parallel_external_lb implies (data_parallel_rank is not None or (nnodes > 1 and data_parallel_size > 1))",
+      "params": [
+        "data_parallel_external_lb",
+        "data_parallel_rank",
+        "nnodes",
+        "data_parallel_size"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "外部 LB 必须知道本实例的 DP rank：可显式给 --data-parallel-rank，或在多机+多 DP 时由 node_rank 推导。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2242,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2241,
+          "snippet": "if self.data_parallel_rank is None:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2246,
+          "snippet": "`--data-parallel-size` greater than 1 and use `--nnodes`"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.8
+      },
+      "id": "C025",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig data_parallel_rank   Input should be a valid integer [type=int_type, input_value=None, input_type=NoneType]     For further information visit https://errors.pydantic.dev/2.13/v/int_type",
+        "run_at": "2026-09-26T06:37:47.328369+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "data_parallel_external_lb implies data_parallel_size_local in (1, None)",
+      "params": [
+        "data_parallel_external_lb",
+        "data_parallel_size_local"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "纯外部 LB 时每个实例只服务一个 DP rank，--data-parallel-size-local 只能是 1 或留空。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2250,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2249,
+          "snippet": "if self.data_parallel_size_local not in (1, None):"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C026",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, data_parallel_size_local (4) must be <= data_parallel_size (1) [type=value_error, input_value=ArgsKwargs((), {'data_par...arallel_size_local': 4}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.328596+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "data_parallel_hybrid_lb implies data_parallel_size_local is not None",
+      "params": [
+        "data_parallel_hybrid_lb",
+        "data_parallel_size_local"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "hybrid LB 需要显式给出本节点的 DP 实例数，否则无法划分本地/远程 engine。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2293,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2292,
+          "snippet": "if self.data_parallel_hybrid_lb:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C027",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig data_parallel_size_local   Input should be a valid integer [type=int_type, input_value=None, input_type=NoneType]     For further information visit https://errors.pydantic.dev/2.13/v/int_type",
+        "run_at": "2026-09-26T06:37:47.328824+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_fault_tolerance implies (data_parallel_external_lb or data_parallel_rank is not None)",
+      "params": [
+        "enable_fault_tolerance",
+        "data_parallel_external_lb",
+        "data_parallel_rank"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "容错只支持外部 LB 模式：外部 LB 下每个 DP 实例可被外部探活/重启，内部 LB 模式不支持。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2224,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2223,
+          "snippet": "if self.enable_fault_tolerance and not data_parallel_external_lb:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2221,
+          "snippet": "self.data_parallel_external_lb or self.data_parallel_rank is not None"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C030",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig data_parallel_rank   Input should be a valid integer [type=int_type, input_value=None, input_type=NoneType]     For further information visit https://errors.pydantic.dev/2.13/v/int_type",
+        "run_at": "2026-09-26T06:37:47.388972+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "max_num_batched_tokens >= max_num_seqs",
+      "params": [
+        "max_num_batched_tokens",
+        "max_num_seqs"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "每个调度步最多跑 max_num_seqs 条序列、每条至少 1 个 token，batch 预算必须不小于序列数（默认路径用 min 夹取，SchedulerConfig 另有硬校验）。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2986,
+          "snippet": "assert self.max_num_batched_tokens is not None  # For type checking"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2987,
+          "snippet": "self.max_num_seqs = min(self.max_num_seqs, self.max_num_batched_tokens)"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 309,
+          "snippet": "if self.max_num_batched_tokens < self.max_num_seqs:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.9
+      },
+      "id": "C034",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "ValidationError: 1 validation error for SchedulerConfig   Value error, max_num_batched_tokens (16) must be greater than or equal to max_num_seqs (32). [type=value_error, input_value=ArgsKwargs((), {'runner_t...16, 'max_num_seqs': 32}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.580520+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (data_parallel_hybrid_lb and data_parallel_external_lb)",
+      "params": [
+        "data_parallel_hybrid_lb",
+        "data_parallel_external_lb"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "hybrid LB 与完全 external LB 是两种互斥的 DP 负载均衡模式，同时开启 create_engine_config 立即报错。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2167,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2166,
+          "snippet": "if self.data_parallel_hybrid_lb and self.data_parallel_external_lb:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2168,
+          "snippet": "\"Invalid data-parallel launch options: \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C039",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, data_parallel_external_lb can only be set when data_parallel_size > 1 [type=value_error, input_value=ArgsKwargs((), {'data_par...ault_tolerance': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.680815+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "not enable_chunked_prefill implies max_num_batched_tokens >= max_model_len",
+      "params": [
+        "enable_chunked_prefill",
+        "max_num_batched_tokens",
+        "max_model_len"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "关闭 chunked prefill 时一次前向必须吃下整条序列，batch token 预算不能小于 max_model_len（SchedulerConfig.verify_max_model_len 同样硬校验）。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2944,
+          "snippet": "assert model_config.max_model_len is not None, ("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2947,
+          "snippet": "if not self.enable_chunked_prefill:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2950,
+          "snippet": "model_config.max_model_len,"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 297,
+          "snippet": "self.max_num_batched_tokens < max_model_len"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 300,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.9
+      },
+      "id": "C042",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "ValidationError: 1 validation error for SchedulerConfig   Value error, max_num_batched_tokens (16) is smaller than max_model_len (4096). This effectively limits the maximum sequence length to max_num_batched_tokens and makes vLLM reject longer sequences. Please increase max_num_batched_tokens or decrease max_model_len. [type=value_error, input_value=ArgsKwargs((), {'runner_t...16, 'max_num_seqs': 16}), input_type=",
+        "run_at": "2026-09-26T06:37:47.794876+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "dp_shared_memory → cpu_offload",
+      "params": [
+        "dp_shared_memory",
+        "cpu_offload"
+      ],
+      "scope": "engram",
+      "severity": "error",
+      "mechanism": "DP 副本共享的是 CPU pinned 内存中的 embedding 权重，因此 dp_shared_memory 只有在 cpu_offload 打开时才有意义。",
+      "evidence": [
+        {
+          "file": "vllm/config/engram.py",
+          "line": 61,
+          "snippet": "if self.dp_shared_memory and not self.cpu_offload:"
+        },
+        {
+          "file": "vllm/config/engram.py",
+          "line": 62,
+          "snippet": "dp_shared_memory requires cpu_offload=True"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C045",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig engram_config   Value error, dp_shared_memory requires cpu_offload=True [type=value_error, input_value={'dp_shared_memory': True, 'cpu_offload': False}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.878902+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "0 < kv_cache_metrics_sample <= 1.0",
+      "params": [
+        "kv_cache_metrics_sample"
+      ],
+      "scope": "kv_cache",
+      "severity": "error",
+      "mechanism": "KV cache 指标采样率必须落在 (0,1]；ObservabilityConfig 字段同样限定 gt=0、le=1，调度器把该配置直接传给采样器。",
+      "evidence": [
+        {
+          "file": "vllm/v1/core/kv_cache_metrics.py",
+          "line": 50,
+          "snippet": "assert 0 < sample_rate <= 1.0, ("
+        },
+        {
+          "file": "vllm/v1/core/kv_cache_metrics.py",
+          "line": 51,
+          "snippet": "f\"sample_rate must be in (0, 1.0], got {sample_rate}\""
+        },
+        {
+          "file": "vllm/config/observability.py",
+          "line": 65,
+          "snippet": "kv_cache_metrics_sample: float = Field(default=0.01, gt=0, le=1)"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C051",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ObservabilityConfig",
+        "observed": "ValidationError: 1 validation error for ObservabilityConfig kv_cache_metrics_sample   Input should be greater than 0 [type=greater_than, input_value=0.0, input_type=float]     For further information visit https://errors.pydantic.dev/2.13/v/greater_than",
+        "run_at": "2026-09-26T06:37:47.911569+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "0.0 <= watermark < 1.0",
+      "params": [
+        "watermark"
+      ],
+      "scope": "kv_cache",
+      "severity": "error",
+      "mechanism": "SchedulerConfig.watermark 是准入时为 KV cache 保留的空闲块比例，字段限定 ge=0.0 且 lt=1.0；KVCacheManager 另断言 >= 0。",
+      "evidence": [
+        {
+          "file": "vllm/v1/core/kv_cache_manager.py",
+          "line": 210,
+          "snippet": "assert watermark >= 0.0, \"watermark must be non-negative\""
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 178,
+          "snippet": "watermark: float = Field(default=0.0, ge=0.0, lt=1.0)"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C052",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "ValidationError: 1 validation error for SchedulerConfig watermark   Input should be less than 1 [type=less_than, input_value=1.5, input_type=float]     For further information visit https://errors.pydantic.dev/2.13/v/less_than",
+        "run_at": "2026-09-26T06:37:47.911649+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "kv_connector is not None → kv_role is not None",
+      "params": [
+        "kv_connector",
+        "kv_role"
+      ],
+      "scope": "kv_transfer",
+      "severity": "error",
+      "mechanism": "配置 KV connector 时必须声明 kv_role，否则引擎无法判断本实例发送还是接收 KV cache。",
+      "evidence": [
+        {
+          "file": "vllm/config/kv_transfer.py",
+          "line": 136,
+          "snippet": "if self.kv_connector is not None and self.kv_role is None:"
+        },
+        {
+          "file": "vllm/config/kv_transfer.py",
+          "line": 137,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C067",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig kv_transfer_config   Value error, Please specify kv_role when kv_connector is set, supported roles are ('kv_producer', 'kv_both', 'kv_consumer') [type=value_error, input_value={'kv_connector': 'NixlConnector', 'kv_role': None}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:47.911754+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "kv_role ∈ {kv_producer, kv_consumer, kv_both}",
+      "params": [
+        "kv_role"
+      ],
+      "scope": "kv_transfer",
+      "severity": "error",
+      "mechanism": "kv_role 决定实例在 KV 传输中的角色，取值必须落在 KVRole 字面量集合内，否则 is_kv_producer/is_kv_consumer 判定失效。",
+      "evidence": [
+        {
+          "file": "vllm/config/kv_transfer.py",
+          "line": 13,
+          "snippet": "KVRole = Literal[KVProducer, KVConsumer]"
+        },
+        {
+          "file": "vllm/config/kv_transfer.py",
+          "line": 130,
+          "snippet": "if self.kv_role is not None and self.kv_role not in get_args(KVRole):"
+        },
+        {
+          "file": "vllm/config/kv_transfer.py",
+          "line": 131,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C068",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig kv_transfer_config.kv_role   Input should be 'kv_producer', 'kv_both' or 'kv_consumer' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:47.938939+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "isinstance(tokenizer, str)（tokenizer 必须可解析为路径或 HF 模型 ID）",
+      "params": [
+        "tokenizer"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "tokenizer 最终必须是字符串；None 会在 post-init 早期被填充为 model，填充失败则报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 942,
+          "snippet": "if not isinstance(self.tokenizer, str):"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 943,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C078",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig tokenizer   Input should be a valid string [type=string_type, input_value=123, input_type=int]     For further information visit https://errors.pydantic.dev/2.13/v/string_type",
+        "run_at": "2026-09-26T06:37:49.782579+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "model_type in {'gemma2', 'gemma3', 'gemma3_text', 'glm4'} ⇒ dtype != torch.float16",
+      "params": [
+        "model_type",
+        "dtype"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "这些模型类型存在数值不稳定问题，不支持 float16，必须改用 bfloat16/float32。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 2268,
+          "snippet": "if model_type in _FLOAT16_NOT_SUPPORTED_MODELS and dtype == torch.float16:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 2270,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C079",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, Invalid repository ID or local directory specified: 'google/gemma-2-2b'. Please verify the following requirements: 1. Provide a valid Hugging Face repository ID. 2. Specify a local directory that contains a recognized configuration file.    - For Hugging Face models: ensure the presence of a 'config.json'.    - For Mistral models: ensure the presen",
+        "run_at": "2026-09-26T06:37:49.833461+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "not (enable_prompt_embeds == True and is_encoder_decoder == True)",
+      "params": [
+        "enable_prompt_embeds",
+        "is_encoder_decoder"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "encoder-decoder 模型不接受 inputs_embeds，因此与 --enable-prompt-embeds 互斥。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 954,
+          "snippet": "if self.enable_prompt_embeds and self.is_encoder_decoder:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 957,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C081",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, Invalid repository ID or local directory specified: 'google-t5/t5-small'. Please verify the following requirements: 1. Provide a valid Hugging Face repository ID. 2. Specify a local directory that contains a recognized configuration file.    - For Hugging Face models: ensure the presence of a 'config.json'.    - For Mistral models: ensure the prese",
+        "run_at": "2026-09-26T06:37:50.030996+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "quantization ∈ DEPRECATED_QUANTIZATION_METHODS ⇒ allow_deprecated_quantization == True",
+      "params": [
+        "quantization",
+        "allow_deprecated_quantization"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "使用已废弃的量化方法必须显式设置 --allow-deprecated-quantization 才能继续。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1347,
+          "snippet": "if self.quantization in me_quant.DEPRECATED_QUANTIZATION_METHODS:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1355,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C084",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, ('The quantization method %s is deprecated and will be removed in future versions of vLLM. To bypass, set `--allow-deprecated-quantization`.', 'fbgemm_fp8') [type=value_error, input_value=ArgsKwargs((), {'model': ...ltimodal_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:50.239758+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "quantization ∈ QUANTIZATION_METHODS（supported_quantization）",
+      "params": [
+        "quantization",
+        "model"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "量化方法必须属于 vLLM 注册支持的集合，否则报 Unknown quantization method。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1340,
+          "snippet": "if self.quantization not in supported_quantization:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1341,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C085",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, Unknown quantization method: ___invalid___. Must be one of ['awq', 'auto_awq', 'fp8', 'fbgemm_fp8', 'fp_quant', 'modelopt', 'modelopt_fp4', 'modelopt_mxfp8', 'modelopt_mixed', 'auto_gptq', 'gptq', 'gptq_marlin', 'awq_marlin', 'humming', 'compressed-tensors', 'experts_int8', 'quark', 'moe_wna16', 'torchao', 'inc', 'mxfp4', 'gpt_oss_mxfp4', 'deepseek",
+        "run_at": "2026-09-26T06:37:50.364102+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "runner_type == 'pooling' 且模型非 pooling 模型 ⇒ convert ∈ {'embed', 'classify'}",
+      "params": [
+        "runner",
+        "runner_type",
+        "convert"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "非 pooling 模型要当 pooling 用必须选择支持的转换器（embed/classify），否则报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 677,
+          "snippet": "if self.runner_type == \"pooling\" and not is_pooling_model:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 681,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C089",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, Invalid repository ID or local directory specified: 'Qwen/Qwen2.5-0.5B'. Please verify the following requirements: 1. Provide a valid Hugging Face repository ID. 2. Specify a local directory that contains a recognized configuration file.    - For Hugging Face models: ensure the presence of a 'config.json'.    - For Mistral models: ensure the presen",
+        "run_at": "2026-09-26T06:37:50.972223+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "模型仅支持 pooling 且不支持生成 ⇒ runner not in {'draft', 'generate'}（应使用 runner='pooling' 或 'auto'）",
+      "params": [
+        "runner",
+        "runner_type"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "纯 embedding 模型不支持 draft/generate runner，解析出的 runner_type 落在两者之一时直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 666,
+          "snippet": "and self.runner_type in (\"draft\", \"generate\")"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 668,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C092",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ModelConfig",
+        "observed": "ValidationError: 1 validation error for ModelConfig   Value error, Invalid repository ID or local directory specified: 'intfloat/e5-small-v2'. Please verify the following requirements: 1. Provide a valid Hugging Face repository ID. 2. Specify a local directory that contains a recognized configuration file.    - For Hugging Face models: ensure the presence of a 'config.json'.    - For Mistral models: ensure the pre",
+        "run_at": "2026-09-26T06:37:51.144617+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "collect_detailed_traces 非空 → otlp_traces_endpoint 已设置（非空）",
+      "params": [
+        "collect_detailed_traces",
+        "otlp_traces_endpoint"
+      ],
+      "scope": "observability",
+      "severity": "error",
+      "mechanism": "细粒度 trace 必须导出到 OTLP endpoint；未配置 endpoint 时收集的数据无处上报，因此直接拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/config/observability.py",
+          "line": 167,
+          "snippet": "if self.collect_detailed_traces and not self.otlp_traces_endpoint:"
+        },
+        {
+          "file": "vllm/config/observability.py",
+          "line": 168,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C099",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ObservabilityConfig",
+        "observed": "ValidationError: 1 validation error for ObservabilityConfig   Value error, collect_detailed_traces requires `--otlp-traces-endpoint` to be set. [type=value_error, input_value=ArgsKwargs((), {'show_hid...onitor_verbose': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.708711+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "offload_backend == 'prefetch' or offload_group_size > 0 → offload_num_in_group <= offload_group_size",
+      "params": [
+        "offload_num_in_group",
+        "offload_group_size",
+        "offload_backend"
+      ],
+      "scope": "offload",
+      "severity": "error",
+      "mechanism": "每组预取的层数不能超过组大小，否则分组切分无法构造。",
+      "evidence": [
+        {
+          "file": "vllm/config/offload.py",
+          "line": 100,
+          "snippet": "or self.prefetch.offload_group_size > 0:"
+        },
+        {
+          "file": "vllm/config/offload.py",
+          "line": 101,
+          "snippet": "if self.prefetch.offload_num_in_group > self.prefetch.offload_group_size:"
+        },
+        {
+          "file": "vllm/config/offload.py",
+          "line": 102,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C100",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:OffloadConfig",
+        "observed": "ValidationError: 1 validation error for OffloadConfig   Value error, offload_num_in_group (3) must be <= offload_group_size (2) [type=value_error, input_value=ArgsKwargs((), {'offload_... offload_params=set())}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.708872+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "offload_backend == 'prefetch' or offload_group_size > 0 → offload_prefetch_step >= 1",
+      "params": [
+        "offload_prefetch_step",
+        "offload_group_size",
+        "offload_backend"
+      ],
+      "scope": "offload",
+      "severity": "error",
+      "mechanism": "预取至少需要提前 1 个 step 才有意义，0 或负值会使预取调度失效。",
+      "evidence": [
+        {
+          "file": "vllm/config/offload.py",
+          "line": 107,
+          "snippet": "if self.prefetch.offload_prefetch_step < 1:"
+        },
+        {
+          "file": "vllm/config/offload.py",
+          "line": 108,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C101",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:OffloadConfig",
+        "observed": "ValidationError: 1 validation error for OffloadConfig   Value error, offload_prefetch_step (0) must be >= 1 when prefetch offloading is enabled (offload_group_size > 0) [type=value_error, input_value=ArgsKwargs((), {'offload_... offload_params=set())}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.709006+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "(numa_bind_nodes is not None or numa_bind_cpus is not None) ⇒ numa_bind == True",
+      "params": [
+        "numa_bind",
+        "numa_bind_nodes",
+        "numa_bind_cpus"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "手动指定 NUMA 节点/CPU 绑定列表时必须先开启 numa_bind，否则配置被静默忽略，故直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 520,
+          "snippet": "if not self.numa_bind and ("
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 523,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C102",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, numa_bind_nodes and numa_bind_cpus require numa_bind=True. [type=value_error, input_value=ArgsKwargs((), {'data_par...ault_tolerance': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.709150+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "0 <= data_parallel_rank < data_parallel_size",
+      "params": [
+        "data_parallel_rank",
+        "data_parallel_size"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "DP rank 必须落在 [0, data_parallel_size) 区间内。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 929,
+          "snippet": "if not (0 <= self.data_parallel_rank < self.data_parallel_size):"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 930,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C103",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, data_parallel_rank (2) must be in the range [0, 2) [type=value_error, input_value=ArgsKwargs((), {'data_par...data_parallel_rank': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.709434+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "all(len(cpuset) > 0 for cpuset in numa_bind_cpus)",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "numa_bind_cpus 的每个条目（对应一张 GPU）都必须是非空字符串。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 468,
+          "snippet": "if not cpuset:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 469,
+          "snippet": "raise ValueError(\"numa_bind_cpus entries must not be empty.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C104",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_cpus   Value error, numa_bind_cpus entries must not be empty. [type=value_error, input_value=[''], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.709947+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "all(node >= 0 for node in numa_bind_nodes)",
+      "params": [
+        "numa_bind_nodes"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "numa_bind_nodes 的每个条目都是 numactl NUMA 节点索引，必须为非负整数。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 455,
+          "snippet": "if any(node < 0 for node in value):"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 456,
+          "snippet": "raise ValueError(\"numa_bind_nodes must contain non-negative integers.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C105",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_nodes   Value error, numa_bind_nodes must contain non-negative integers. [type=value_error, input_value=[-1], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.710128+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "data_parallel_external_lb == True ⇒ data_parallel_size > 1",
+      "params": [
+        "data_parallel_external_lb",
+        "data_parallel_size"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "外部负载均衡模式只有存在多个 DP rank 时才有意义。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 515,
+          "snippet": "if self.data_parallel_size <= 1 and self.data_parallel_external_lb:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 516,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C106",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, data_parallel_external_lb can only be set when data_parallel_size > 1 [type=value_error, input_value=ArgsKwargs((), {'data_par...data_parallel_size': 1}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.710289+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "data_parallel_size_local <= data_parallel_size",
+      "params": [
+        "data_parallel_size_local",
+        "data_parallel_size"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "本地 DP 组数不可能超过全局数据并行规模。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 509,
+          "snippet": "if self.data_parallel_size_local > self.data_parallel_size:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 510,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C107",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, data_parallel_size_local (2) must be <= data_parallel_size (1) [type=value_error, input_value=ArgsKwargs((), {'data_par...arallel_size_local': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.710465+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "distributed_executor_backend ∈ (None, str, Executor 子类或导入路径)",
+      "params": [
+        "distributed_executor_backend"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "后端字段只接受字符串（'ray'/'mp'/'uni'/'external_launcher' 或自定义导入路径）、Executor 子类或 None。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1062,
+          "snippet": "self.distributed_executor_backend is not None"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1069,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C108",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 3 validation errors for ParallelConfig distributed_executor_backend.str   Input should be a valid string [type=string_type, input_value=123, input_type=int]     For further information visit https://errors.pydantic.dev/2.13/v/string_type distributed_executor_backend.literal['ray','mp','uni','external_launcher']   Input should be 'ray', 'mp', 'uni' or 'external_launcher' [type=literal_error, input_",
+        "run_at": "2026-09-26T06:37:51.710641+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "elastic_ep_max_dp_size >= data_parallel_size",
+      "params": [
+        "elastic_ep_max_dp_size",
+        "data_parallel_size"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "弹性 EP 允许的最大 DP 规模不能小于初始 data_parallel_size。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 954,
+          "snippet": "if self.elastic_ep_max_dp_size < self.data_parallel_size:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 955,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C110",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, --elastic-ep-max-dp-size must be greater than or equal to the initial data_parallel_size (4). [type=value_error, input_value=ArgsKwargs((), {'data_par...t', communicator=None)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.710804+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_dbo 或 ubatch_size > 1 ⇒ min(dbo_decode_token_threshold, dbo_prefill_token_threshold) >= (2 if enable_dbo else ubatch_size)",
+      "params": [
+        "enable_dbo",
+        "ubatch_size",
+        "dbo_decode_token_threshold",
+        "dbo_prefill_token_threshold"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "启用微批（use_ubatching）时批大小阈值至少要达到微批个数 num_ubatches（enable_dbo 时为 2，否则为 ubatch_size），否则单微批不足一个 token 无法切分。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1093,
+          "snippet": "if self.use_ubatching and ("
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1094,
+          "snippet": "min(self.dbo_decode_token_threshold, self.dbo_prefill_token_threshold)"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1097,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C111",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, dbo_decode_token_threshold and dbo_prefill_token_threshold must be at least the number of microbatches (2). [type=value_error, input_value=ArgsKwargs((), {'data_par...de_token_threshold': 1}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.711042+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_elastic_ep == True ⇒ enable_eplb == True",
+      "params": [
+        "enable_elastic_ep",
+        "enable_eplb"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "弹性 EP 只支持与 EPLB 搭配使用。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 887,
+          "snippet": "if not self.enable_eplb:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 888,
+          "snippet": "raise ValueError(\"Elastic EP is only supported with enable_eplb=True.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C112",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, Elastic EP is only supported with enable_eplb=True. [type=value_error, input_value=ArgsKwargs((), {'data_par...ault_tolerance': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.711232+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "enable_elastic_ep == True ⇒ not data_parallel_external_lb and not data_parallel_hybrid_lb",
+      "params": [
+        "enable_elastic_ep",
+        "data_parallel_external_lb",
+        "data_parallel_hybrid_lb"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "弹性 EP 依赖单一 API server 与 core client 协调扩缩容，与 external/hybrid 两种 DP 负载均衡模式互斥。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 894,
+          "snippet": "if self.data_parallel_external_lb or self.data_parallel_hybrid_lb:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 895,
+          "snippet": "raise NotImplementedError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C113",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "NotImplementedError: Elastic EP is not compatible with data_parallel_external_lb or data_parallel_hybrid_lb. Elastic EP relies on a single API server and core client to coordinate scale up/down.",
+        "run_at": "2026-09-26T06:37:51.711398+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_elastic_ep == True ⇒ pipeline_parallel_size == 1",
+      "params": [
+        "enable_elastic_ep",
+        "pipeline_parallel_size"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "弹性 EP 不支持流水线并行。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 889,
+          "snippet": "if self.pipeline_parallel_size > 1:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 890,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C114",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, Elastic EP is not supported with pipeline parallelism (pipeline_parallel_size=2). [type=value_error, input_value=ArgsKwargs((), {'data_par...t', communicator=None)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.711569+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_eplb == False ⇒ eplb_config.num_redundant_experts == 0",
+      "params": [
+        "enable_eplb",
+        "eplb_config",
+        "num_redundant_experts"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "冗余专家数只在 EPLB 启用时有意义；未开启 EPLB 却设置 num_redundant_experts 属于矛盾配置。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 550,
+          "snippet": "if self.eplb_config.num_redundant_experts != 0:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 551,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C115",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, num_redundant_experts is set to 8 but EPLB is not enabled. Either enable EPLB or unset num_redundant_experts. [type=value_error, input_value=ArgsKwargs((), {'data_par...t', communicator=None)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.711754+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_fault_tolerance == True ⇒ API 进程数 <= 1（即 --api-server-count=1）",
+      "params": [
+        "enable_fault_tolerance"
+      ],
+      "scope": "parallel",
+      "severity": "warning",
+      "mechanism": "容错系统假设单个 AsyncMPClient 管理所有 engine，要求单 API server 进程；对应量 `_api_process_count` 是 API server scale-out 设置的内部字段，不在参数白名单中，故以文字形式表述。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 494,
+          "snippet": "if self.enable_fault_tolerance and self._api_process_count > 1:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 495,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.5
+      },
+      "id": "C118",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, Fault tolerance requires a single API server process (--api-server-count=1), but got 2. The FT system assumes one AsyncMPClient manages all engines. [type=value_error, input_value=ArgsKwargs((), {'data_par..._api_process_count': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.711995+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "log_balancedness == True ⇒ log_balancedness_interval > 0",
+      "params": [
+        "log_balancedness",
+        "log_balancedness_interval"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "开启 balancedness 日志时记录间隔必须为正数；同名字段本身带 gt=0，此处为重复校验（若绕过字段校验仍会触发）。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 113,
+          "snippet": "if self.log_balancedness and self.log_balancedness_interval <= 0:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 114,
+          "snippet": "raise ValueError(\"log_balancedness_interval must be greater than 0.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C119",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:EPLBConfig",
+        "observed": "ValidationError: 1 validation error for EPLBConfig log_balancedness_interval   Input should be greater than 0 [type=greater_than, input_value=0, input_type=int]     For further information visit https://errors.pydantic.dev/2.13/v/greater_than",
+        "run_at": "2026-09-26T06:37:51.712174+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "nnodes > 1 ⇒ distributed_executor_backend in {'mp', 'uni', 'external_launcher'}",
+      "params": [
+        "nnodes",
+        "distributed_executor_backend"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "多节点部署只允许 mp/uni/external_launcher 后端，ray 后端会自行管理节点，不通过 nnodes 配置。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1018,
+          "snippet": "allowed_backends = (\"mp\", \"uni\", \"external_launcher\")"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1023,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C120",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, nnodes > 1 can only be set when distributed executor backend is mp, uni or external_launcher. [type=value_error, input_value=ArgsKwargs((), {'data_par...e': False, 'nnodes': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.712229+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "numa_bind_cpus 中每个 'start-end' 区间的 start <= end",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "numactl CPU-list 中的区间必须升序书写，start > end 的区间非法。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 479,
+          "snippet": "if int(start_str) > int(end_str):"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 480,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C121",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_cpus   Value error, numa_bind_cpus ranges must be ascending, but got '3-1'. [type=value_error, input_value=['3-1'], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.712405+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "numa_bind_cpus 每个条目匹配 numactl CPU 列表语法（如 '0-3' 或 '0,2,4-7'）",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "条目会直接传给 numactl --physcpubind，必须匹配 _NUMACTL_CPUSET_PATTERN 正则的 CPU-list 语法。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 470,
+          "snippet": "if not _NUMACTL_CPUSET_PATTERN.fullmatch(cpuset):"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 471,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C122",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_cpus   Value error, numa_bind_cpus entries must use numactl CPU list syntax, for example '0-3' or '0,2,4-7'. [type=value_error, input_value=['abc'], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.712591+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "numa_bind_cpus 若提供则必须非空（len(numa_bind_cpus) >= 1）",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "显式给出 numa_bind_cpus 时空列表是配置错误，必须至少指定一个 CPU 列表。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 465,
+          "snippet": "raise ValueError(\"numa_bind_cpus must not be empty.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C123",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_cpus   Value error, numa_bind_cpus must not be empty. [type=value_error, input_value=[], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.712752+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "numa_bind_nodes 若提供则必须非空（len(numa_bind_nodes) >= 1）",
+      "params": [
+        "numa_bind_nodes"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "显式给出 numa_bind_nodes 时空列表是配置错误，必须至少指定一个 NUMA 节点。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 454,
+          "snippet": "raise ValueError(\"numa_bind_nodes must not be empty.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C124",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig numa_bind_nodes   Value error, numa_bind_nodes must not be empty. [type=value_error, input_value=[], input_type=list]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.712934+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "ray_workers_use_nsight == True ⇒ distributed_executor_backend == 'ray'",
+      "params": [
+        "ray_workers_use_nsight",
+        "distributed_executor_backend"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "nsight profiling 只能在 Ray worker 上启用（use_ray 由 distributed_executor_backend 推出）。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1086,
+          "snippet": "if self.ray_workers_use_nsight and not self.use_ray:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1087,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C125",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, Unable to use nsight profiling unless workers run with Ray. [type=value_error, input_value=ArgsKwargs((), {'data_par...ault_tolerance': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713084+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "use_async == True ⇒ communicator not in {'torch_nccl', 'pynccl'}",
+      "params": [
+        "use_async",
+        "communicator"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "NCCL 多流冲突使 torch_nccl/pynccl 通信后端与异步 EPLB 不兼容；异步时应使用 'torch_gloo'、'nixl' 或不设置（自动选择）。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 106,
+          "snippet": "if self.use_async and self.communicator in (\"torch_nccl\", \"pynccl\"):"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 107,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C126",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:EPLBConfig",
+        "observed": "ValidationError: 1 validation error for EPLBConfig   Value error, torch_nccl communicator is incompatible with async EPLB due to NCCL multi-stream conflicts. Use 'torch_gloo' or 'nixl' instead, or leave communicator unset for automatic selection. [type=value_error, input_value=ArgsKwargs((), {'log_bala...nicator': 'torch_nccl'}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/",
+        "run_at": "2026-09-26T06:37:51.713260+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "use_async == True ⇒ policy == 'default'",
+      "params": [
+        "use_async",
+        "policy"
+      ],
+      "scope": "parallel",
+      "severity": "error",
+      "mechanism": "EPLB 的异步模式目前只实现了默认策略，因此 use_async=True 时 policy 必须保持默认值 'default'。",
+      "evidence": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 104,
+          "snippet": "if self.use_async and self.policy != \"default\":"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 105,
+          "snippet": "raise ValueError(\"Async EPLB is only supported with the default policy.\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C127",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:EPLBConfig",
+        "observed": "ValidationError: 1 validation error for EPLBConfig policy   Input should be 'default' [type=literal_error, input_value='round_robin', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:51.713319+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "logit_sigma != 0",
+      "params": [
+        "logit_sigma"
+      ],
+      "scope": "pooler",
+      "severity": "error",
+      "mechanism": "logit_sigma 用于 (logit - logit_mean)/logit_sigma 归一化，取 0 会除零。",
+      "evidence": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 132,
+          "snippet": "if self.logit_sigma is not None and self.logit_sigma == 0:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 133,
+          "snippet": "logit_sigma cannot be 0"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C139",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:PoolerConfig",
+        "observed": "ValidationError: 1 validation error for PoolerConfig   Value error, logit_sigma cannot be 0 (division by zero) [type=value_error, input_value=ArgsKwargs((), {'task': N...urned_token_ids': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713448+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "pooling_type ∈ SEQ_POOLING_TYPES ∪ TOK_POOLING_TYPES = {CLS, LAST, MEAN, ALL, STEP}",
+      "params": [
+        "pooling_type"
+      ],
+      "scope": "pooler",
+      "severity": "error",
+      "mechanism": "通用 pooling_type 必须能解析为序列池化（CLS/LAST/MEAN）或 token 池化（ALL/STEP）之一，否则 NotImplementedError。",
+      "evidence": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 17,
+          "snippet": "SEQ_POOLING_TYPES: tuple[SequencePoolingType, ...] = get_args(SequencePoolingType)"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 20,
+          "snippet": "TOK_POOLING_TYPES: tuple[TokenPoolingType, ...] = get_args(TokenPoolingType)"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 145,
+          "snippet": "if pooling_type in SEQ_POOLING_TYPES:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 152,
+          "snippet": "elif pooling_type in TOK_POOLING_TYPES:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 160,
+          "snippet": "raise NotImplementedError(pooling_type)"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C140",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:PoolerConfig",
+        "observed": "ValidationError: 2 validation errors for PoolerConfig pooling_type.literal['CLS','LAST','MEAN']   Input should be 'CLS', 'LAST' or 'MEAN' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error pooling_type.literal['ALL','STEP']   Input should be 'ALL' or 'STEP' [type=literal_error, input_value='___invalid___', input_type=",
+        "run_at": "2026-09-26T06:37:51.713526+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "pooling_type ⊥ seq_pooling_type",
+      "params": [
+        "pooling_type",
+        "seq_pooling_type"
+      ],
+      "scope": "pooler",
+      "severity": "error",
+      "mechanism": "pooling_type 是 seq/tok 的通用写法，会解析到 seq_pooling_type；两个入口同时给出会产生歧义。",
+      "evidence": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 136,
+          "snippet": "if self.seq_pooling_type is not None:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 137,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C141",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:PoolerConfig",
+        "observed": "ValidationError: 1 validation error for PoolerConfig   Value error, Cannot set both `pooling_type` and `seq_pooling_type` [type=value_error, input_value=ArgsKwargs((), {'task': N...urned_token_ids': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713585+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "pooling_type ⊥ tok_pooling_type",
+      "params": [
+        "pooling_type",
+        "tok_pooling_type"
+      ],
+      "scope": "pooler",
+      "severity": "error",
+      "mechanism": "pooling_type 是 seq/tok 的通用写法，会解析到 tok_pooling_type；两个入口同时给出会产生歧义。",
+      "evidence": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 140,
+          "snippet": "if self.tok_pooling_type is not None:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 141,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C142",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:PoolerConfig",
+        "observed": "ValidationError: 1 validation error for PoolerConfig   Value error, Cannot set both `pooling_type` and `tok_pooling_type` [type=value_error, input_value=ArgsKwargs((), {'task': N...urned_token_ids': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713644+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "capture_torch_profiler → profiler == 'torch'",
+      "params": [
+        "capture_torch_profiler",
+        "profiler"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "capture_torch_profiler 是对 torch profiler 的额外采集开关，其它 profiler 下无意义。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 247,
+          "snippet": "capture_torch_profiler and self.profiler !="
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 248,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C143",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, capture_torch_profiler is only applicable when profiler is set to 'torch' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713778+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "profiler == 'proton' → proton_profiler_dir 非空",
+      "params": [
+        "profiler",
+        "proton_profiler_dir"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "proton profiler 必须把结果写到指定目录，未给目录则无法产出结果。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 215,
+          "snippet": "if self.profiler == \"proton\" and not proton_profiler_dir:"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 216,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C144",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, proton_profiler_dir must be set when profiler is 'proton' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.713947+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "profiler == 'torch' → torch_profiler_dir 非空",
+      "params": [
+        "profiler",
+        "torch_profiler_dir"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "torch profiler 必须把 trace 写到指定目录，未给目录则无法产出结果。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 185,
+          "snippet": "if self.profiler == \"torch\" and not torch_profiler_dir:"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 186,
+          "snippet": "torch_profiler_dir must be set when profiler is"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C145",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, torch_profiler_dir must be set when profiler is 'torch' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714027+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "proton_graph_attribution → proton_data == 'tree'",
+      "params": [
+        "proton_graph_attribution",
+        "proton_data"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "graph attribution 需要在 Proton 的树形数据上做归因，trace 模式下没有树结构。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 228,
+          "snippet": "self.proton_graph_attribution and self.proton_data !="
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 229,
+          "snippet": "proton_graph_attribution requires proton_data="
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C146",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, proton_graph_attribution requires proton_data='tree' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714099+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "proton_graph_attribution ⊥ proton_mode 以 'periodic_flushing' 开头",
+      "params": [
+        "proton_graph_attribution",
+        "proton_mode"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "两者都在管理 Proton 数据分阶段，同时启用会冲突。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 231,
+          "snippet": "self.proton_graph_attribution"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 232,
+          "snippet": "and self.proton_mode"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 233,
+          "snippet": "periodic_flushing"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 235,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C147",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, proton_graph_attribution is incompatible with periodic_flushing: both manage Proton data phases. [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714186+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "proton_output_format == 'chrome_trace' → proton_data == 'trace'",
+      "params": [
+        "proton_output_format",
+        "proton_data"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "chrome_trace 需要 Proton 以 trace 模式采集的数据，tree 模式无法导出该格式。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 239,
+          "snippet": "self.proton_data !="
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 240,
+          "snippet": "chrome_trace output requires proton_data="
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C148",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, chrome_trace output requires proton_data='trace' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714274+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "proton_output_format ∈ {'hatchet', 'hatchet_msgpack'} → proton_data == 'tree'",
+      "params": [
+        "proton_output_format",
+        "proton_data"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "hatchet 系列格式需要 Proton 的树形数据，trace 模式无法导出。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 242,
+          "snippet": "hatchet_msgpack"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 243,
+          "snippet": "self.proton_data !="
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 245,
+          "snippet": "output requires proton_data="
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C149",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, hatchet output requires proton_data='tree' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714353+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "proton_profiler_dir 必须是本地目录路径（不含 gs://、s3:// 等 URI scheme）",
+      "params": [
+        "proton_profiler_dir"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "proton 在本地文件系统写 trace，URI 形式路径无法被其 writer 使用；注意 torch_profiler_dir 反而允许 URI，两者取值域不同。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 220,
+          "snippet": "if _is_uri_path(proton_profiler_dir):"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 221,
+          "snippet": "proton_profiler_dir must be a local directory"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.6
+      },
+      "id": "C150",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, proton_profiler_dir must be a local directory [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714432+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "torch_profiler_dir 非空 → profiler == 'torch'",
+      "params": [
+        "torch_profiler_dir",
+        "profiler"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "torch_profiler_dir 只被 torch profiler 消费，其它 profiler 下配置该路径无效。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 181,
+          "snippet": "torch_profiler_dir and self.profiler !="
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 182,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C151",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, torch_profiler_dir is only applicable when profiler is set to 'torch' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714511+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "任一 proton_* 选项偏离默认值 → profiler == 'proton'",
+      "params": [
+        "profiler",
+        "proton_profiler_dir",
+        "proton_context",
+        "proton_data",
+        "proton_backend",
+        "proton_mode",
+        "proton_hook",
+        "proton_output_format",
+        "proton_graph_attribution"
+      ],
+      "scope": "profiler",
+      "severity": "error",
+      "mechanism": "proton_* 一组选项只由 proton profiler 消费；profiler 不是 proton 时任何非默认 proton 配置都属于无效配置。",
+      "evidence": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 196,
+          "snippet": "non_default_proton_options = ["
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 210,
+          "snippet": "if self.profiler != \"proton\" and non_default_proton_options:"
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 212,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C152",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ProfilerConfig",
+        "observed": "ValidationError: 1 validation error for ProfilerConfig   Value error, proton_data only applicable when profiler is set to 'proton' [type=value_error, input_value=ArgsKwargs((), {'profiler...gnore_frontend': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714584+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "for shorthand in targets.values(): shorthand ∈ _ONLINE_SHORTHANDS 名称集合",
+      "params": [
+        "targets"
+      ],
+      "scope": "quantization",
+      "severity": "error",
+      "mechanism": "targets 的值只能是内置在线量化简写名（_ONLINE_SHORTHANDS 的键），未知简写直接拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 156,
+          "snippet": "if not isinstance(shorthand, str) or shorthand not in _ONLINE_SHORTHANDS:"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 157,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C154",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:QuantizationConfigArgs",
+        "observed": "ValidationError: 1 validation error for QuantizationConfigArgs targets   Value error, targets[model.layers.0.self_attn.q_proj] = ___invalid___ is not a valid online shorthand name; expected one of ['fp8_per_block', 'fp8_per_channel', 'fp8_per_tensor', 'int8_per_channel_weight_only', 'mxfp4', 'mxfp8', 'nvfp4_per_token'] [type=value_error, input_value={'model.layers.0.self_att..._proj': '___invalid___'}, input_type=",
+        "run_at": "2026-09-26T06:37:51.714661+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "targets is None or (linear is None and moe is None)",
+      "params": [
+        "targets",
+        "linear",
+        "moe"
+      ],
+      "scope": "quantization",
+      "severity": "error",
+      "mechanism": "targets 做逐层覆盖，linear/moe 做整体指定，两种方式同时给出会产生优先级歧义。",
+      "evidence": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 175,
+          "snippet": "if self.linear is not None or self.moe is not None:"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 176,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C155",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:QuantizationConfigArgs",
+        "observed": "ValidationError: 1 validation error for QuantizationConfigArgs   Value error, quantization_config.targets is mutually exclusive with quantization_config.linear/moe, got targets={'model.layers.0.self_attn.q_proj': 'fp8_per_tensor'}, linear=fp8_per_tensor_static, moe=None. [type=value_error, input_value=ArgsKwargs((), {'linear':...oj': 'fp8_per_tensor'}}), input_type=ArgsKwargs]     For further information visit htt",
+        "run_at": "2026-09-26T06:37:51.714756+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "targets is None or isinstance(targets, dict)",
+      "params": [
+        "targets"
+      ],
+      "scope": "quantization",
+      "severity": "error",
+      "mechanism": "targets 是层名/正则到在线量化简写的映射，必须为 dict。",
+      "evidence": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 149,
+          "snippet": "if not isinstance(v, dict):"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 150,
+          "snippet": "targets must be a dict, got"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C156",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:QuantizationConfigArgs",
+        "observed": "TypeError: targets must be a dict, got str",
+        "run_at": "2026-09-26T06:37:51.714870+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "weight | activation ∈ {None, str（QUANT_KEY_NAMES 键）, QuantKey}",
+      "params": [
+        "weight",
+        "activation"
+      ],
+      "scope": "quantization",
+      "severity": "error",
+      "mechanism": "QuantSpec 的 weight/activation 走 QuantKeyField 校验，仅接受 None、QUANT_KEY_NAMES 中的名字或 QuantKey 对象，其它类型（含 int）报 TypeError。",
+      "evidence": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 47,
+          "snippet": "if v is None or isinstance(v, QuantKey):"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 49,
+          "snippet": "if not isinstance(v, str):"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 50,
+          "snippet": "expected str or QuantKey, got"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 80,
+          "snippet": "weight: QuantKeyField = None"
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 83,
+          "snippet": "activation: QuantKeyField = None"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.75
+      },
+      "id": "C157",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:QuantSpec",
+        "observed": "TypeError: expected str or QuantKey, got int",
+        "run_at": "2026-09-26T06:37:51.714925+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "long_prefill_token_threshold <= max_model_len",
+      "params": [
+        "long_prefill_token_threshold",
+        "max_model_len"
+      ],
+      "scope": "scheduler",
+      "severity": "error",
+      "mechanism": "长 prefill 阈值若大于模型最大长度，则任何 prefill 都会被判定为长 prefill，阈值失去意义，直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 324,
+          "snippet": "if self.long_prefill_token_threshold > max_model_len:"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 325,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C158",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "ValidationError: 1 validation error for SchedulerConfig   Value error, long_prefill_token_threshold (2048) cannot be greater than the max_model_len (256). [type=value_error, input_value=ArgsKwargs((), {'runner_t...token_threshold': 2048}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.714972+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "not enable_chunked_prefill → max_num_batched_tokens >= max_model_len",
+      "params": [
+        "max_num_batched_tokens",
+        "max_model_len",
+        "enable_chunked_prefill"
+      ],
+      "scope": "scheduler",
+      "severity": "error",
+      "mechanism": "不开 chunked prefill 时，一条序列的 prefill 必须在一个调度步内完成，因此 token 预算必须覆盖 max_model_len，否则长序列会被拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 296,
+          "snippet": "if ("
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 297,
+          "snippet": "self.max_num_batched_tokens < max_model_len"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 298,
+          "snippet": "and not self.enable_chunked_prefill"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 300,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C160",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SchedulerConfig",
+        "observed": "ValidationError: 1 validation error for SchedulerConfig   Value error, max_num_batched_tokens (2048) is smaller than max_model_len (4096). This effectively limits the maximum sequence length to max_num_batched_tokens and makes vLLM reject longer sequences. Please increase max_num_batched_tokens or decrease max_model_len. [type=value_error, input_value=ArgsKwargs((), {'runner_t...ncoder_decoder': False}), input_typ",
+        "run_at": "2026-09-26T06:37:51.715197+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts => decode_context_parallel_size == 1 and prefill_context_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "decode_context_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "scope": "scheduler_core",
+      "severity": "error",
+      "mechanism": "返回路由专家（MoE 可观测性）不支持上下文并行：DCP/PCP world size 必须都为 1，否则断言失败。",
+      "evidence": [
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 392,
+          "snippet": "if self.enable_return_routed_experts:"
+        },
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 393,
+          "snippet": "assert self.dcp_world_size == 1 and self.pcp_world_size == 1, ("
+        },
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 394,
+          "snippet": "\"enable_return_routed_experts does not support context parallelism \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C162",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Decode context parallelism for GQA/MQA requires `--tensor-parallel-size` (2) to be greater than the model's total number of KV heads (4). Increase `--tensor-parallel-size` or set `--decode-context-parallel-size 1`. [type=value_error, input_value=ArgsKwargs((), {'model_co...very_timeout_sec=120))}), input_type=ArgsKwargs]     For further information ",
+        "run_at": "2026-09-26T06:37:51.715281+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "scheduling_policy in {\"fcfs\", \"priority\"}",
+      "params": [
+        "scheduling_policy"
+      ],
+      "scope": "scheduler_core",
+      "severity": "error",
+      "mechanism": "调度策略只有 FCFS 与 PRIORITY 两种实现，其它取值在构造请求队列时抛 ValueError；SchedulerConfig.policy 默认 fcfs。",
+      "evidence": [
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 203,
+          "snippet": "if policy == SchedulingPolicy.PRIORITY:"
+        },
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 205,
+          "snippet": "elif policy == SchedulingPolicy.FCFS:"
+        },
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 208,
+          "snippet": "raise ValueError(f\"Unknown scheduling policy: {policy}\")"
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 141,
+          "snippet": "policy: SchedulerPolicy = \"fcfs\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C164",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:EPLBConfig",
+        "observed": "ValidationError: 1 validation error for EPLBConfig policy   Input should be 'default' [type=literal_error, input_value='___invalid___', input_type=str]     For further information visit https://errors.pydantic.dev/2.13/v/literal_error",
+        "run_at": "2026-09-26T06:37:51.882253+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "1.0 <= synthetic_acceptance_length <= num_speculative_tokens + 1",
+      "params": [
+        "synthetic_acceptance_length",
+        "num_speculative_tokens"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "目标平均接受长度不能小于 1（至少接受 1 个 token），也不能超过 n 个 draft token 全部接受再加 1。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 582,
+          "snippet": "if not 1.0 <= length <= float(n + 1):"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 583,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C168",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, synthetic_acceptance_length must be in [1, 5], got 10.0. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882338+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "all(0.0 <= r <= 1.0 for r in synthetic_acceptance_rates)",
+      "params": [
+        "synthetic_acceptance_rates"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "接受率是概率，每个条目必须落在 [0, 1]。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 571,
+          "snippet": "if not all(0.0 <= r <= 1.0 for r in rates):"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 572,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C169",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, synthetic_acceptance_rates entries must be in [0, 1], got [1.5, 0.5]. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882510+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "index_share_for_mtp_iteration is not None ⇒ method == 'mtp' 且 draft_model_config is not None",
+      "params": [
+        "index_share_for_mtp_iteration",
+        "method",
+        "draft_model_config"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "该开关用于 MTP 迭代复用首步稀疏索引，写入 draft hf_config，仅 mtp 方法下有意义。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1556,
+          "snippet": "if self.method != \"mtp\" or self.draft_model_config is None:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1557,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C176",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, index_share_for_mtp_iteration is only supported with method='mtp' [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882642+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "arithmetic",
+      "expr": "len(synthetic_acceptance_rates) == num_speculative_tokens",
+      "params": [
+        "synthetic_acceptance_rates",
+        "num_speculative_tokens"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "per-position 接受率列表必须为每个投机位置各提供一个值，长度等于 num_speculative_tokens。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 567,
+          "snippet": "if len(rates) != n:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 568,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C177",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, synthetic_acceptance_rates must have length 3, got [0.9, 0.8]. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882757+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "method != 'dspark' ⇒ not (enable_adaptive_verification and use_local_argmax_reduction)",
+      "params": [
+        "method",
+        "enable_adaptive_verification",
+        "use_local_argmax_reduction"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "自适应验证需要 draft logits 估计接受率，而 use_local_argmax_reduction 从不物化完整 logits，二者互斥（DSpark 除外）。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1565,
+          "snippet": "self.method != \"dspark\""
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1567,
+          "snippet": "and self.use_local_argmax_reduction"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1569,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C178",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, Adaptive verification estimates per-position acceptance from the draft logits, which use_local_argmax_reduction never materializes. Disable one of them. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882875+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "method == 'custom_class' ⇒ model 非空（需提供自定义 proposer 模块路径）",
+      "params": [
+        "method",
+        "model"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "custom_class 方法要求 model 字段填自定义 proposer 的导入路径；只给方法不给路径会报错（若也不给 num_speculative_tokens 则由后续校验报缺）。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1162,
+          "snippet": "if self.model is None:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1163,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.8
+      },
+      "id": "C179",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, method='custom_class' requires 'model' to contain the custom proposer module path (e.g., 'my_module.MyProposer'). [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.882990+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "method == 'dspark' ⇒ target_model_config is not None",
+      "params": [
+        "method",
+        "target_model_config"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "DeepSeek DSpark 的权重可能随目标 checkpoint 发布，需要目标模型配置来定位 draft 权重与量化设置。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1147,
+          "snippet": "raise ValueError(\"target_model_config must be present for dspark\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C181",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, target_model_config must be present for dspark [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.883177+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "method == 'mtp' ⇒ target_model_config is not None",
+      "params": [
+        "method",
+        "target_model_config"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "mtp 方法从目标模型派生 draft（复用其 model_weights/model 与量化设置），没有目标模型配置无法构造。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1129,
+          "snippet": "if self.target_model_config is None:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1130,
+          "snippet": "raise ValueError(\"target_model_config must be present for mtp\")"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C183",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, target_model_config must be present for mtp [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.883464+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "model is None 且 num_speculative_tokens 非空 ⇒ method ∈ {'mtp', 'dspark', 'ngram', 'ngram_gpu', 'suffix', 'extract_hidden_states'}",
+      "params": [
+        "model",
+        "num_speculative_tokens",
+        "method"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "只有这些方法可以自带/派生 draft 模型；其余方法（draft_model、eagle 等）给了 num_speculative_tokens 却不给 model 会直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1168,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1169,
+          "snippet": "\"num_speculative_tokens was provided but without speculative model.\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.8
+      },
+      "id": "C184",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, num_speculative_tokens was provided but without speculative model. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.883604+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "num_speculative_tokens > 0",
+      "params": [
+        "num_speculative_tokens"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "投机 token 数必须大于 0（字段本身 gt=0，此处为重复校验）。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1791,
+          "snippet": "if self.num_speculative_tokens <= 0:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1792,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C187",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig num_speculative_tokens   Input should be greater than 0 [type=greater_than, input_value=0, input_type=int]     For further information visit https://errors.pydantic.dev/2.13/v/greater_than",
+        "run_at": "2026-09-26T06:37:51.883757+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "prompt_lookup_min <= prompt_lookup_max",
+      "params": [
+        "prompt_lookup_min",
+        "prompt_lookup_max"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "ngram/ngram_gpu 的 ngram 窗口下界不能大于上界；两者均未提供时默认都为 5，只提供一个时另一个取相同值。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1197,
+          "snippet": "if self.prompt_lookup_min > self.prompt_lookup_max:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1198,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C190",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, prompt_lookup_min=10 must be <= prompt_lookup_max=5 [type=value_error, input_value=ArgsKwargs((), {'enforce_...prompt_lookup_min': 10}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.884499+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "rejection_sample_method != 'synthetic' ⇒ synthetic_acceptance_rates is None and synthetic_acceptance_length is None",
+      "params": [
+        "rejection_sample_method",
+        "synthetic_acceptance_rates",
+        "synthetic_acceptance_length"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "合成接受率/接受长度参数只在 rejection_sample_method='synthetic' 时合法，其他方法下设置即报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1805,
+          "snippet": "elif ("
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1807,
+          "snippet": "or self.synthetic_acceptance_length is not None"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1809,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C191",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, synthetic_acceptance_rates / synthetic_acceptance_length are only valid with rejection_sample_method='synthetic'. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.884794+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "rejection_sample_method == 'synthetic' ⇒ synthetic_acceptance_rates 与 synthetic_acceptance_length 恰有其一非空",
+      "params": [
+        "rejection_sample_method",
+        "synthetic_acceptance_rates",
+        "synthetic_acceptance_length"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "合成拒绝采样必须且只能通过 per-position rates 或目标平均接受长度之一来参数化，二者不能同时给出、也不能都不给。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 561,
+          "snippet": "if (rates is None) == (length is None):"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 562,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C192",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, rejection_sample_method='synthetic' requires exactly one of synthetic_acceptance_rates or synthetic_acceptance_length. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.885100+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "speculative_config.tensor_parallel_size is None（draft TP 应通过 draft_tensor_parallel_size 指定）",
+      "params": [
+        "tensor_parallel_size",
+        "draft_tensor_parallel_size",
+        "speculative_config"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "SpeculativeConfig 中的 tensor_parallel_size 字段只是为提示误用而保留，设置即报错，正确参数是 draft_tensor_parallel_size。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1778,
+          "snippet": "if self.tensor_parallel_size is not None:"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1779,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C193",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, 'tensor_parallel_size' is not a valid argument in the speculative_config. Please pass 'draft_tensor_parallel_size' instead. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.885360+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "synthetic_acceptance_rates 单调不增（rates[i] <= rates[i-1]）",
+      "params": [
+        "synthetic_acceptance_rates"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "第 i 个条目是前 i+1 个 draft token 全部被接受的边际概率，天然随位置单调不增。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 576,
+          "snippet": "if any(rates[i] > rates[i - 1] for i in range(1, n)):"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 577,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C197",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, synthetic_acceptance_rates must be non-increasing, got [0.5, 0.8, 0.2]. [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.886492+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "use_heterogeneous_vocab == True ⇒ method == 'draft_model'",
+      "params": [
+        "use_heterogeneous_vocab",
+        "method"
+      ],
+      "scope": "speculative",
+      "severity": "error",
+      "mechanism": "异构词表（TLI 算法）只在 draft_model 方法下实现。",
+      "evidence": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1819,
+          "snippet": "if self.use_heterogeneous_vocab and not self.uses_draft_model():"
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1820,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C200",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "ValidationError: 1 validation error for SpeculativeConfig   Value error, use_heterogeneous_vocab only works with method='draft_model' [type=value_error, input_value=ArgsKwargs((), {'enforce_...'prompt_lookup_min': 2}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.887108+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "disable_additional_properties → backend == 'guidance'",
+      "params": [
+        "disable_additional_properties",
+        "backend"
+      ],
+      "scope": "structured_outputs",
+      "severity": "error",
+      "mechanism": "additionalProperties 禁用只有 guidance 后端支持，其它后端设置会报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 69,
+          "snippet": "disable_additional_properties and self.backend !="
+        },
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 70,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C201",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:StructuredOutputsConfig",
+        "observed": "ValidationError: 1 validation error for StructuredOutputsConfig   Value error, disable_additional_properties is only supported for the guidance backend. [type=value_error, input_value=ArgsKwargs((), {'backend'...e_in_reasoning': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.887295+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "disable_any_whitespace → backend ∈ {'xgrammar', 'guidance'}",
+      "params": [
+        "disable_any_whitespace",
+        "backend"
+      ],
+      "scope": "structured_outputs",
+      "severity": "error",
+      "mechanism": "只有 xgrammar 与 guidance 两个结构化输出后端实现了任意空白禁用，其它后端设置该开关无效。",
+      "evidence": [
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 64,
+          "snippet": "disable_any_whitespace and self.backend not in"
+        },
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 65,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C202",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:StructuredOutputsConfig",
+        "observed": "ValidationError: 1 validation error for StructuredOutputsConfig   Value error, disable_any_whitespace is only supported for xgrammar and guidance backends. [type=value_error, input_value=ArgsKwargs((), {'backend'...e_in_reasoning': False}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.887400+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "enable_elastic_ep implies elastic_ep_max_dp_size >= data_parallel_size",
+      "params": [
+        "enable_elastic_ep",
+        "elastic_ep_max_dp_size",
+        "data_parallel_size"
+      ],
+      "scope": "v1_engine",
+      "severity": "error",
+      "mechanism": "弹性扩缩容的目标 DP size 不能超过 --elastic-ep-max-dp-size，且该上限本身必须 ≥ 初始 data_parallel_size。",
+      "evidence": [
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1715,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1714,
+          "snippet": "if new_data_parallel_size > parallel_config.elastic_ep_max_dp_size:"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 954,
+          "snippet": "if self.elastic_ep_max_dp_size < self.data_parallel_size:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C210",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "ValidationError: 1 validation error for ParallelConfig   Value error, Elastic EP with async EPLB requires the NIXL package. Either install NIXL or set --eplb-config.use_async=false. [type=value_error, input_value=ArgsKwargs((), {'data_par...tic_ep_max_dp_size': 1}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.887480+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "enable_elastic_ep implies not (data_parallel_hybrid_lb or data_parallel_external_lb)",
+      "params": [
+        "enable_elastic_ep",
+        "data_parallel_hybrid_lb",
+        "data_parallel_external_lb"
+      ],
+      "scope": "v1_engine",
+      "severity": "error",
+      "mechanism": "Elastic EP 扩缩容依赖单一 API server/core client 协调，与外部/混合 LB 冲突；ParallelConfig 中也会有显式 NotImplementedError。",
+      "evidence": [
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1421,
+          "snippet": "assert not ("
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1422,
+          "snippet": "parallel_config.data_parallel_hybrid_lb"
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1423,
+          "snippet": "or parallel_config.data_parallel_external_lb"
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 894,
+          "snippet": "if self.data_parallel_external_lb or self.data_parallel_hybrid_lb:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C211",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:ParallelConfig",
+        "observed": "NotImplementedError: Elastic EP is not compatible with data_parallel_external_lb or data_parallel_hybrid_lb. Elastic EP relies on a single API server and core client to coordinate scale up/down.",
+        "run_at": "2026-09-26T06:37:51.891800+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "async_scheduling == True and speculative_config != None implies speculative_config.method in EAGLE/MTP/DraftModel/NGramGPU/DSpark 集合",
+      "params": [
+        "async_scheduling",
+        "speculative_config",
+        "method"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "异步调度目前只支持 EAGLE/MTP/Draft Model/NGram GPU/DSpark 类投机解码。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1419,
+          "snippet": "self.speculative_config.method not in get_args(EagleModelTypes)"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1420,
+          "snippet": "and self.speculative_config.method not in get_args(NgramGPUTypes)"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1425,
+          "snippet": "\"Currently, async scheduling is only supported \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C227",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Currently, async scheduling is only supported with EAGLE/MTP/Draft Model/NGram GPU/DSpark kind of speculative decoding [type=value_error, input_value=ArgsKwargs((), {'model_co...ue, stream_interval=1)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.892527+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "async_scheduling == True implies speculative_config.disable_padded_drafter_batch == False",
+      "params": [
+        "async_scheduling",
+        "disable_padded_drafter_batch"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "异步调度与 disable_padded_drafter_batch=True 不兼容（仅当启用投机解码时检查）。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1429,
+          "snippet": "if self.speculative_config.disable_padded_drafter_batch:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1431,
+          "snippet": "\"Async scheduling is not compatible with \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C228",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Async scheduling is not compatible with disable_padded_drafter_batch=True. [type=value_error, input_value=ArgsKwargs((), <unprintable dict object>), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:51.925424+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies kv_transfer_config is None or not kv_transfer_config.is_kv_transfer_instance",
+      "params": [
+        "enable_return_routed_experts",
+        "kv_transfer_config"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "--enable-return-routed-experts 与任何 KV connector（PD 分离、KV offload）不兼容。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1303,
+          "snippet": "self.kv_transfer_config is not None"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1304,
+          "snippet": "and self.kv_transfer_config.is_kv_transfer_instance"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1307,
+          "snippet": "\"--enable-return-routed-experts is incompatible with KV \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C253",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, --enable-return-routed-experts is incompatible with KV connectors (PD disaggregation, KV cache offload). [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.122121+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "return_sampling_mask == True implies logprobs_mode == 'processed_logprobs'",
+      "params": [
+        "return_sampling_mask",
+        "logprobs_mode"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "replay 返回的 logprobs 需与采样掩码在同一 nucleus 上归一化，因此要求 logprobs_mode='processed_logprobs'。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1129,
+          "snippet": "if model_config.logprobs_mode != \"processed_logprobs\":"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1131,
+          "snippet": "\"sampling distribution replay requires \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C266",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, sampling distribution replay requires logprobs_mode='processed_logprobs' so that returned logprobs are normalized over the same nucleus as the sampling mask [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.438672+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "return_sampling_mask == True implies not model_config.logits_processors",
+      "params": [
+        "return_sampling_mask",
+        "logits_processors"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "采样分布 replay 不支持自定义 logits processors。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1113,
+          "snippet": "if model_config is None or not model_config.return_sampling_mask:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1125,
+          "snippet": "if model_config.logits_processors:"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C267",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, sampling distribution replay does not support custom logits processors [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.589326+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "speculative_config != None implies scheduler_config.max_num_batched_tokens > speculative_config.max_num_new_slots_for_drafting（由 num_speculative_tokens、parallel_drafting 等推导）",
+      "params": [
+        "max_num_batched_tokens",
+        "num_speculative_tokens"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "调度预算必须严格大于投机起草所需的额外 slot 数，否则没有 token 槽位可调度。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2119,
+          "snippet": "self.speculative_config.max_num_new_slots_for_drafting"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2144,
+          "snippet": "if max_num_batched_tokens <= scheduled_token_delta:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2146,
+          "snippet": "\"VllmConfig does not have enough slots to schedule a token and\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.7
+      },
+      "id": "C271",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, VllmConfig does not have enough slots to schedule a token and support the speculative decoding settings. Got max_num_batched_tokens=4 and scheduled_token_delta=4. [type=value_error, input_value=ArgsKwargs((), {'model_co...se, stream_interval=1)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.748910+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "range",
+      "expr": "speculative_config != None implies scheduler_config.max_num_scheduled_tokens > 0（默认取 max_num_batched_tokens）",
+      "params": [
+        "max_num_scheduled_tokens",
+        "max_num_batched_tokens",
+        "speculative_config"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "启用投机解码时，max_num_scheduled_tokens 若为 0（用户显式设置或推导结果）会导致没有任何 token 可被调度而报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2123,
+          "snippet": "self.scheduler_config.max_num_scheduled_tokens = max_num_batched_tokens"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2125,
+          "snippet": "if self.scheduler_config.max_num_scheduled_tokens <= 0:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2127,
+          "snippet": "\"max_num_scheduled_tokens is set to\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.7
+      },
+      "id": "C272",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, max_num_scheduled_tokens is set to 0 based on the speculative decoding settings, which does not allow any tokens to be scheduled. Increase max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens. [type=value_error, input_value=ArgsKwargs((), {'model_co...se, stream_interval=1)}), input_type=ArgsKwar",
+        "run_at": "2026-09-26T06:37:52.782221+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.draft_sample_method == 'probabilistic'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "draft_sample_method"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "水印 + 投机解码要求 draft_sample_method='probabilistic'。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1150,
+          "snippet": "if watermark_config is None:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1154,
+          "snippet": "if speculative_config.draft_sample_method != \"probabilistic\":"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1156,
+          "snippet": "\"Speculative decoding with watermarking requires \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C277",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Speculative decoding with watermarking requires draft_sample_method='probabilistic'. [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.818680+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.method in {'dspark','eagle','eagle3','mtp'}",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "method"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "水印只支持自回归模型类投机解码（dspark/eagle/eagle3/mtp）。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1171,
+          "snippet": "if speculative_config.method not in (\"dspark\", \"eagle\", \"eagle3\", \"mtp\"):"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1173,
+          "snippet": "\"Watermarking supports only autoregressive model-based \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C278",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Watermarking supports only autoregressive model-based speculative decoding. [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.856076+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.rejection_sample_method == 'standard'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "rejection_sample_method"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "水印 + 投机解码要求 rejection_sample_method='standard'。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1150,
+          "snippet": "if watermark_config is None:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1159,
+          "snippet": "if speculative_config.rejection_sample_method != \"standard\":"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1161,
+          "snippet": "\"Speculative decoding with watermarking requires \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C279",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Speculative decoding with watermarking requires rejection_sample_method='standard'. [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.892326+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config.parallel_drafting == True implies speculative_config.method == 'dspark'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "parallel_drafting",
+        "method"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "水印场景不支持并行投机起草，唯一例外是 dspark。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1165,
+          "snippet": "speculative_config.parallel_drafting"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1166,
+          "snippet": "and speculative_config.method != \"dspark\""
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1169,
+          "snippet": "\"Parallel speculative drafting is not supported with watermarking.\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C280",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Parallel speculative drafting is not supported with watermarking. [type=value_error, input_value=ArgsKwargs((), {'model_co...transfer_config': None}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-26T06:37:52.927016+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "async_scheduling=True 且 speculative_config 非空 → speculative_config.method ∈ EagleModelTypes ∪ NgramGPUTypes ∪ {'draft_model','dspark'}",
+      "params": [
+        "async_scheduling",
+        "method",
+        "speculative_config"
+      ],
+      "scope": "taskA",
+      "severity": "error",
+      "mechanism": "异步调度目前只适配 EAGLE/MTP/Draft Model/NGram GPU/DSpark 这几类投机提议器。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1424,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1421,
+          "snippet": "and self.speculative_config.method != \"draft_model\""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "CM-C113",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "ValidationError: 1 validation error for VllmConfig   Value error, Currently, async scheduling is only supported with EAGLE/MTP/Draft Model/NGram GPU/DSpark kind of speculative decoding [type=value_error, input_value=ArgsKwargs((), {'model_co...ue, stream_interval=1)}), input_type=ArgsKwargs]     For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-27T03:01:59.666018+00:00",
+        "source": "S4-trackA（跨模型新增，2026-09-27）"
+      },
+      "cross_model_source": "GLM-5.3-Flash 批次"
+    },
+    {
+      "type": "enum",
+      "expr": "PoolerConfig 不再接受字段 'normalize'：传入即报错，应改用 use_activation",
+      "params": [
+        "use_activation"
+      ],
+      "scope": "taskB2",
+      "severity": "error",
+      "mechanism": "normalize 是已移除的 PoolerConfig 参数，遗留用法在 model_validator(mode=before) 中被定向拒绝并指向替代参数 use_activation。不确定点：约束实质是键级黑名单，normalize 本身不在参数清单，故 params 以替代项 use_activation 表示。",
+      "evidence": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 124,
+          "snippet": "if \"normalize\" in values:"
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 125,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 60,
+          "snippet": "use_activation: bool | None = None"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.7
+      },
+      "id": "CM-C193",
+      "validation": {
+        "status": "confirmed",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:PoolerConfig(manual-removed-key)",
+        "observed": "ValidationError: 1 validation error for PoolerConfig\n  Value error, Parameter `normalize` was removed; use `use_activation` instead. [type=value_error, input_value=ArgsKwargs((), {'normalize': True}), input_type=ArgsKwargs]\n    For further information visit https://errors.pydantic.dev/2.13/v/value_error",
+        "run_at": "2026-09-27T03:04:51.956718+00:00",
+        "source": "S4-trackA（跨模型新增，2026-09-27）"
+      },
+      "cross_model_source": "GLM-5.3-Flash 批次"
+    }
+  ]
+}

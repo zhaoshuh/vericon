@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "generated_at": "2026-09-26",
+    "method": "构造违反约束的配置 → 运行真实引擎 → 捕获报错/崩溃（与 S4 同一协议）",
+    "engines": {
+      "vllm": {
+        "version": "0.30.0",
+        "commit": "ced6857afa0ea7b2e3f0846a62e1394e90f15607",
+        "confirmed": 113,
+        "note": "111 主批次（deepseek-v4.1-flash）+ 2 跨模型新增（CM-C113/CM-C193，GLM-5.3-Flash 批次）",
+        "source": "实验记录/已验证约束.json（S4 轨道A：配置构造校验路径）"
+      },
+      "llamacpp": {
+        "version": "0.5.0-dev build 11194",
+        "commit": "9f70b2cec",
+        "confirmed": 2,
+        "refuted": 6,
+        "source": "实验记录/llamacpp_constraints.json（S6 Phase A）"
+      }
+    }
+  },
+  "llamacpp_confirmed": [
+    {
+      "id": "LC01",
+      "type": "range",
+      "expr": "n_batch >= 1",
+      "params": ["n_batch"],
+      "severity": "error",
+      "mechanism": "n_batch=0 时上下文创建失败并直接 abort（SIGABRT），进程崩溃",
+      "evidence": [
+        {"file": "llama.cpp v0.5.0-dev (prebuilt b11194)", "line": null, "snippet": "exit=-6 (SIGABRT), stack in common_init_/llama_server"}
+      ],
+      "validation": {"status": "confirmed", "observed": "exit=-6 (SIGABRT)", "case": "L4: -b 0"}
+    },
+    {
+      "id": "LC02",
+      "type": "implication",
+      "expr": "ctk/ctv 为量化类型（如 q8_0） ⇒ flash_attn 必须开启",
+      "params": ["ctk", "ctv", "flash_attn"],
+      "severity": "error",
+      "mechanism": "量化 V cache 需要 flash attention 内核支持；否则上下文创建失败",
+      "evidence": [
+        {"file": "llama.cpp v0.5.0-dev (prebuilt b11194)", "line": null,
+         "snippet": "model: quantized V cache requires flash_attn to be enabled"}
+      ],
+      "validation": {"status": "confirmed",
+                     "observed": "error: model: quantized V cache requires flash_attn to be enabled（exit=1）；-fa on 同参通过",
+                     "case": "L6: -fa off -ctk q8_0 -ctv q8_0"}
+    }
+  ],
+  "llamacpp_refuted_or_not_enforced": [
+    {"expr": "n_ubatch <= n_batch", "case": "-b 128 -ub 256", "observed": "无报错、无警告（v0.5.0 未强制；与社区常识相悖）"},
+    {"expr": "keep <= n_ctx", "case": "-c 256 --keep 512", "observed": "无报错（静默处理）"},
+    {"expr": "n_ubatch >= 1", "case": "-ub 0", "observed": "视为默认/auto"},
+    {"expr": "threads >= 1", "case": "-t 0", "observed": "视为 auto（默认线程数）"},
+    {"expr": "n_gpu_layers <= 设备层数", "case": "-ngl 1（无 CUDA 构建）", "observed": "静默忽略"},
+    {"expr": "prompt_len <= n_ctx", "case": "-c 16 + 长 prompt", "observed": "静默截断，无报错"}
+  ],
+  "note": "同一抽取-证伪协议跨两个真实引擎：vLLM 113 条 confirmed（配置构造路径）+ llama.cpp 2 条 confirmed；同时发现 6 条人工常识在当前版本并不成立——支持『约束必须从源码抽取并执行验证，且需随版本维护』的核心论点（服务 Paper 1 动机与 Paper 2 主题）。"
+}

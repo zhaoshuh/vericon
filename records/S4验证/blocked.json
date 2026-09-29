@@ -1,0 +1,909 @@
+{
+  "stats": {
+    "blocked": 22
+  },
+  "constraints": [
+    {
+      "type": "implication",
+      "expr": "data_parallel_hybrid_lb implies not headless",
+      "params": [
+        "data_parallel_hybrid_lb",
+        "headless"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "headless 引擎没有自己的 API server；hybrid LB 需要本节点承担 API server 负载，因此二者不能同时开启。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2163,
+          "snippet": "assert not headless or not self.data_parallel_hybrid_lb, ("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C028",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 headless 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.329055+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "enable_lora and speculative_config is not None implies max_num_batched_tokens >= max_num_seqs * (num_speculative_tokens + 1)",
+      "params": [
+        "enable_lora",
+        "speculative_config",
+        "max_num_batched_tokens",
+        "max_num_seqs",
+        "num_speculative_tokens"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "LoRA + 投机解码会为每条序列预留 1 个 draft 步的 n+1 个 token，batch token 预算不足直接报错。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2487,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2481,
+          "snippet": "and scheduler_config.max_num_batched_tokens"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2483,
+          "snippet": "scheduler_config.max_num_seqs"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2484,
+          "snippet": "* (speculative_config.num_speculative_tokens + 1)"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C031",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:SpeculativeConfig",
+        "observed": "assign_fail: 字段 enable_lora 不属于 SpeculativeConfig（且无法嵌套注入）; 字段 speculative_config 不属于 SpeculativeConfig（且无法嵌套注入）; 字段 max_num_batched_tokens 不属于 SpeculativeConfig（且无法嵌套注入）; 字段 max_num_seqs 不属于 SpeculativeConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.389211+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "kda_prefill_backend == \"flashkda\" implies platform is CUDA",
+      "params": [
+        "kda_prefill_backend"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "flashkda 预填充内核只在 CUDA 平台可用；平台类约束来自 current_platform 检测而非参数，但对搜索空间同样起剪枝作用。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2636,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2633,
+          "snippet": "self.kda_prefill_backend == \"flashkda\""
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2634,
+          "snippet": "and not current_platform.is_cuda()"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C032",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 kda_prefill_backend 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.524791+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "kda_prefill_backend == \"fused\" implies platform is ROCm",
+      "params": [
+        "kda_prefill_backend"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "fused 预填充内核只在 ROCm 平台可用；与 flashkda 的 CUDA 限制一起把取值按平台切分。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2640,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 2639,
+          "snippet": "if self.kda_prefill_backend == \"fused\" and not current_platform.is_rocm():"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C033",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 kda_prefill_backend 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.550387+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "speculative_config is None or (spec_method is None and spec_model is None and spec_tokens is None)",
+      "params": [
+        "speculative_config",
+        "spec_method",
+        "spec_model",
+        "spec_tokens"
+      ],
+      "scope": "engine_args",
+      "severity": "error",
+      "mechanism": "--speculative-config 字典与 --spec-method/--spec-model/--spec-tokens 简写写的是同一批字段（method/model/num_speculative_tokens），两种写法同时出现会直接报错，只能选一种。",
+      "evidence": [
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 1943,
+          "snippet": "raise ValueError("
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 1942,
+          "snippet": "if key in self.speculative_config:"
+        },
+        {
+          "file": "vllm/engine/arg_utils.py",
+          "line": 1944,
+          "snippet": "--speculative-config['{key}'] are mutually exclusive"
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C044",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 spec_method 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.847912+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "max_cpu_loras >= max_loras",
+      "params": [
+        "max_cpu_loras",
+        "max_loras"
+      ],
+      "scope": "lora",
+      "severity": "error",
+      "mechanism": "CPU 侧 LoRA 槽位是 GPU 活跃槽位的超集：GPU 上同时驻留的 adapter 必须都能在 CPU 缓存放得下，否则换入换出会失败。",
+      "evidence": [
+        {
+          "file": "vllm/config/lora.py",
+          "line": 120,
+          "snippet": "elif self.max_cpu_loras < self.max_loras:"
+        },
+        {
+          "file": "vllm/config/lora.py",
+          "line": 121,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C069",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 enable_lora 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.965463+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "ssu_algorithm is not None → backend == flashinfer",
+      "params": [
+        "ssu_algorithm",
+        "backend"
+      ],
+      "scope": "mamba",
+      "severity": "error",
+      "mechanism": "只有 FlashInfer backend 暴露 selective state update 算法选择；triton 等 backend 下指定该参数无效。",
+      "evidence": [
+        {
+          "file": "vllm/config/mamba.py",
+          "line": 76,
+          "snippet": "if self.backend != MambaBackendEnum.FLASHINFER:"
+        },
+        {
+          "file": "vllm/config/mamba.py",
+          "line": 77,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C070",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 mamba_ssu_algorithm 不属于 VllmConfig（且无法嵌套注入）; 字段 mamba_backend 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:47.996220+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "ssu_algorithm ∈ {auto, simple, vertical, horizontal}",
+      "params": [
+        "ssu_algorithm"
+      ],
+      "scope": "mamba",
+      "severity": "error",
+      "mechanism": "ssu_algorithm 选择 Mamba selective state update 算法，取值必须落在 MambaSSUAlgorithm 字面量集合内，否则传给 FlashInfer 会失败。",
+      "evidence": [
+        {
+          "file": "vllm/config/mamba.py",
+          "line": 33,
+          "snippet": "MambaSSUAlgorithm = Literal"
+        },
+        {
+          "file": "vllm/config/mamba.py",
+          "line": 70,
+          "snippet": "if self.ssu_algorithm not in valid_algorithms:"
+        },
+        {
+          "file": "vllm/config/mamba.py",
+          "line": 72,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C071",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 字段 mamba_ssu_algorithm 不属于 VllmConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:48.031099+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "arithmetic",
+      "expr": "(total_num_attention_heads // total_num_kv_heads) % decode_context_parallel_size == 0",
+      "params": [
+        "total_num_attention_heads",
+        "total_num_kv_heads",
+        "decode_context_parallel_size"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "GQA/MQA 下每个 KV head 对应的 Q head 数必须能被 DCP 规模整除。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1468,
+          "snippet": "if num_q_per_kv % decode_context_parallel_size != 0:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1469,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C072",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: ValidationError: 2 validation errors for ModelConfig\nhf_overrides.dict[str,any]\n  Input should be a valid dictionary [type=dict_type, input_value=VitConfig(hidden_size=115...e=14, image_num_pos=577), input_type=VitCon",
+        "run_at": "2026-09-26T06:37:48.057306+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "arithmetic",
+      "expr": "decode_context_parallel_size <= tensor_parallel_size // total_num_kv_heads",
+      "params": [
+        "decode_context_parallel_size",
+        "tensor_parallel_size",
+        "total_num_kv_heads"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "DCP 规模上限由 TP/KV-head 数推导，超出则报错。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1457,
+          "snippet": "max_dcp_size = tensor_parallel_size // total_num_kv_heads"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1459,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C073",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: ValidationError: 2 validation errors for ModelConfig\nhf_overrides.dict[str,any]\n  Input should be a valid dictionary [type=dict_type, input_value=VitConfig(hidden_size=115...e=14, image_num_pos=577), input_type=VitCon",
+        "run_at": "2026-09-26T06:37:49.145639+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "inequality",
+      "expr": "decode_context_parallel_size > 1 且模型非 MLA ⇒ tensor_parallel_size > total_num_kv_heads",
+      "params": [
+        "decode_context_parallel_size",
+        "tensor_parallel_size",
+        "total_num_kv_heads"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "GQA/MQA 的 decode context parallel 要求 TP 大于模型总 KV head 数，才能保证每 rank 至少分到一个 KV head。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1448,
+          "snippet": "if tensor_parallel_size <= total_num_kv_heads:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1449,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C074",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: ValidationError: 2 validation errors for ModelConfig\nhf_overrides.dict[str,any]\n  Input should be a valid dictionary [type=dict_type, input_value=VitConfig(hidden_size=115...e=14, image_num_pos=577), input_type=VitCon",
+        "run_at": "2026-09-26T06:37:49.243219+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "multimodal_config.mm_tensor_ipc == 'torch_shm' ⇒ pipeline_parallel_size == 1 且 tensor_parallel_size == 1 且 prefill_context_parallel_size == 1 且 data_parallel_size == 1",
+      "params": [
+        "mm_tensor_ipc",
+        "multimodal_config",
+        "data_parallel_size",
+        "tensor_parallel_size",
+        "pipeline_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "torch_shm IPC 只支持单进程单 rank（world_size_across_dp = PP×TP×PCP×DP = 1）；官方报错信息只列了 DP/TP/PP，PCP>1 同样会使其大于 1。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1483,
+          "snippet": "and self.multimodal_config.mm_tensor_ipc == \"torch_shm\""
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1484,
+          "snippet": "and parallel_config.world_size_across_dp > 1"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1486,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.85
+      },
+      "id": "C080",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_tensor_ipc 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:49.942761+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "pipeline_parallel_size > 1 ⇒ 模型实现 SupportsPP 接口（registry.is_pp_supported_model(architectures)）",
+      "params": [
+        "pipeline_parallel_size",
+        "architectures"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "流水线并行要求模型支持按层切分，仅注册了 SupportsPP 的架构可用。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1437,
+          "snippet": "if pipeline_parallel_size > 1 and not self.registry.is_pp_supported_model("
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1440,
+          "snippet": "raise NotImplementedError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.75
+      },
+      "id": "C082",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: ValidationError: 1 validation error for ModelConfig\n  Value error, Invalid repository ID or local directory specified: 'intfloat/e5-small-v2'.\nPlease verify the following requirements:\n1. Provide a valid Hugging Face ",
+        "run_at": "2026-09-26T06:37:50.095264+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "runner_type == 'pooling' ⇒ not (renderer_num_workers > 1 and mm_processor_cache_gb > 0)",
+      "params": [
+        "renderer_num_workers",
+        "mm_processor_cache_gb",
+        "runner_type",
+        "multimodal_config"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "pooling 的预处理跑在 renderer worker 上，而多模态处理器缓存非线程安全，故 pooling 模型下二者不能同时启用。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 843,
+          "snippet": "self.renderer_num_workers > 1"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 844,
+          "snippet": "and self.multimodal_config.mm_processor_cache_gb > 0"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 847,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C088",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_processor_cache_gb 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:50.498102+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "arithmetic",
+      "expr": "total_num_attention_heads % tensor_parallel_size == 0",
+      "params": [
+        "total_num_attention_heads",
+        "tensor_parallel_size"
+      ],
+      "scope": "model",
+      "severity": "error",
+      "mechanism": "注意力头数必须能被张量并行规模整除，否则无法均分到各 TP rank。",
+      "evidence": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1426,
+          "snippet": "if total_num_attention_heads % tensor_parallel_size != 0:"
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1427,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C090",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: ValidationError: 2 validation errors for ModelConfig\nhf_overrides.dict[str,any]\n  Input should be a valid dictionary [type=dict_type, input_value=VitConfig(hidden_size=115...e=14, image_num_pos=577), input_type=VitCon",
+        "run_at": "2026-09-26T06:37:51.044943+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "(mm_encoder_fp8_scale_path is not None or mm_encoder_fp8_scale_save_path is not None) → mm_encoder_attn_dtype == 'fp8'",
+      "params": [
+        "mm_encoder_fp8_scale_path",
+        "mm_encoder_fp8_scale_save_path",
+        "mm_encoder_attn_dtype"
+      ],
+      "scope": "multimodal",
+      "severity": "error",
+      "mechanism": "FP8 scale 的加载/保存路径只在 encoder attention 以 fp8 运行时才有意义，dtype 非 fp8 时设置路径属于无效配置。",
+      "evidence": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 310,
+          "snippet": "self.mm_encoder_attn_dtype !="
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 311,
+          "snippet": "self.mm_encoder_fp8_scale_path is not None"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 314,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C093",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_encoder_fp8_scale_path 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:51.212403+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "enum",
+      "expr": "mm_encoder_attn_backend != 'xformers'（该 backend 已移除）",
+      "params": [
+        "mm_encoder_attn_backend"
+      ],
+      "scope": "multimodal",
+      "severity": "error",
+      "mechanism": "XFORMERS attention backend 已从代码库移除（PR #29262），显式选择会直接报错，必须改用受支持 backend。",
+      "evidence": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 285,
+          "snippet": "XFORMERS"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 286,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C094",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_encoder_attn_backend 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:51.308235+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "type",
+      "expr": "mm_encoder_attn_backend is None or isinstance(mm_encoder_attn_backend, (str, AttentionBackendEnum))",
+      "params": [
+        "mm_encoder_attn_backend"
+      ],
+      "scope": "multimodal",
+      "severity": "error",
+      "mechanism": "该字段只能是字符串（大小写不敏感解析为枚举）或 AttentionBackendEnum 实例，其它类型在解析前被断言拦下。",
+      "evidence": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 291,
+          "snippet": "if value is None or isinstance(value, AttentionBackendEnum):"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 294,
+          "snippet": "assert isinstance(value, str), ("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "assert",
+        "confidence": 0.85
+      },
+      "id": "C095",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_encoder_attn_backend 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:51.409653+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "mm_encoder_fp8_scale_path ⊥ mm_encoder_fp8_scale_save_path",
+      "params": [
+        "mm_encoder_fp8_scale_path",
+        "mm_encoder_fp8_scale_save_path"
+      ],
+      "scope": "multimodal",
+      "severity": "error",
+      "mechanism": "保存 scale 需要动态缩放（运行时计算），与加载静态 scale 文件的语义冲突，二者不能同时设置。",
+      "evidence": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 320,
+          "snippet": "self.mm_encoder_fp8_scale_path is not None"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 321,
+          "snippet": "and self.mm_encoder_fp8_scale_save_path is not None"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 323,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.95
+      },
+      "id": "C096",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_encoder_attn_dtype 不属于 ModelConfig（且无法嵌套注入）; 字段 mm_encoder_fp8_scale_path 不属于 ModelConfig（且无法嵌套注入）; 字段 mm_encoder_fp8_scale_save_path 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:51.507380+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "implication",
+      "expr": "mm_shm_cache_max_object_size_mb != 默认值(128) → mm_processor_cache_type == 'shm'",
+      "params": [
+        "mm_shm_cache_max_object_size_mb",
+        "mm_processor_cache_type"
+      ],
+      "scope": "multimodal",
+      "severity": "error",
+      "mechanism": "该大小上限只被共享内存处理器缓存使用；cache type 不是 shm 时显式改动它说明配置矛盾，直接拒绝。",
+      "evidence": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 301,
+          "snippet": "self.mm_processor_cache_type !="
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 302,
+          "snippet": "self.mm_shm_cache_max_object_size_mb"
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 305,
+          "snippet": "raise ValueError("
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C098",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 model_config 失败: 字段 mm_processor_cache_type 不属于 ModelConfig（且无法嵌套注入）; 字段 mm_shm_cache_max_object_size_mb 不属于 ModelConfig（且无法嵌套注入）",
+        "run_at": "2026-09-26T06:37:51.607955+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies decode_context_parallel_size == 1 and prefill_context_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "decode_context_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "--enable-return-routed-experts 与上下文并行（DCP>1 或 PCP>1）不兼容。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1289,
+          "snippet": "self.parallel_config.decode_context_parallel_size > 1"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1290,
+          "snippet": "or self.parallel_config.prefill_context_parallel_size > 1"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1293,
+          "snippet": "\"--enable-return-routed-experts is incompatible with context \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C252",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 parallel_config 失败: ValidationError: 1 validation error for ParallelConfig\n  Value error, World size (2) is larger than the number of available GPUs (1) in this node. If this is intentional and you are using:\n- ray, set '--distributed-ex",
+        "run_at": "2026-09-26T06:37:51.958167+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    },
+    {
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies pipeline_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "pipeline_parallel_size"
+      ],
+      "scope": "vllm_config",
+      "severity": "error",
+      "mechanism": "--enable-return-routed-experts 与流水线并行（PP>1）不兼容。",
+      "evidence": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1281,
+          "snippet": "and self.model_config.enable_return_routed_experts"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1283,
+          "snippet": "if self.parallel_config.pipeline_parallel_size > 1:"
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1285,
+          "snippet": "\"--enable-return-routed-experts is incompatible with \""
+        }
+      ],
+      "extraction": {
+        "source": "static-candidate+agent",
+        "candidate_kind": "if-raise",
+        "confidence": 0.9
+      },
+      "id": "C254",
+      "validation": {
+        "status": "blocked",
+        "track": "A",
+        "engine": "vllm-0.30.0",
+        "strategy": "S1:VllmConfig",
+        "observed": "assign_fail: 嵌套注入 parallel_config 失败: ValidationError: 1 validation error for ParallelConfig\n  Value error, World size (2) is larger than the number of available GPUs (1) in this node. If this is intentional and you are using:\n- ray, set '--distributed-ex",
+        "run_at": "2026-09-26T06:37:52.272405+00:00",
+        "source": "S4-trackA（vLLM 配置构造校验路径）"
+      }
+    }
+  ]
+}

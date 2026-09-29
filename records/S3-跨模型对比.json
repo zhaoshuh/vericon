@@ -1,0 +1,119 @@
+{
+  "v1": {
+    "model": "deepseek-v4.1-flash (harness default)",
+    "total": 282,
+    "path": "F:\\文献\\AgentOps\\实验记录\\约束图.json"
+  },
+  "v2": {
+    "model": "glm-5.3-flash (pinned)",
+    "total": 320,
+    "path": "F:\\文献\\AgentOps\\实验记录\\约束图-model2.json"
+  },
+  "match_definitions": {
+    "M1": "证据锚定：存在相同 (file,line)",
+    "M2": "语义近似：(params, type) 相同"
+  },
+  "v2_matched_by_v1": {
+    "M1": 282,
+    "M2": 171,
+    "union": 286,
+    "none": 34
+  },
+  "v1_matched_by_v2": {
+    "M1": 274,
+    "M2": 163,
+    "none": 8
+  },
+  "v2_only_ids": [
+    "C033",
+    "C050",
+    "C101",
+    "C106",
+    "C108",
+    "C109",
+    "C111",
+    "C113",
+    "C114",
+    "C138",
+    "C141",
+    "C143",
+    "C145",
+    "C184",
+    "C187",
+    "C193",
+    "C199",
+    "C210",
+    "C223",
+    "C238",
+    "C239",
+    "C240",
+    "C241",
+    "C244",
+    "C246",
+    "C248",
+    "C249",
+    "C262",
+    "C263",
+    "C272",
+    "C276",
+    "C277",
+    "C279",
+    "C285"
+  ],
+  "v1_only_ids": [
+    "C007",
+    "C095",
+    "C130",
+    "C157",
+    "C159",
+    "C227",
+    "C258",
+    "C270"
+  ],
+  "per_scope_v2": {
+    "model": {
+      "v2": 21,
+      "matched_by_v1": 21
+    },
+    "parallel": {
+      "v2": 28,
+      "matched_by_v1": 27
+    },
+    "platforms": {
+      "v2": 15,
+      "matched_by_v1": 14
+    },
+    "speculative": {
+      "v2": 37,
+      "matched_by_v1": 36
+    },
+    "taskA": {
+      "v2": 86,
+      "matched_by_v1": 74
+    },
+    "taskB2": {
+      "v2": 54,
+      "matched_by_v1": 46
+    },
+    "taskC": {
+      "v2": 54,
+      "matched_by_v1": 43
+    },
+    "v1/core/block_pool": {
+      "v2": 2,
+      "matched_by_v1": 2
+    },
+    "v1/core/encoder_cache": {
+      "v2": 1,
+      "matched_by_v1": 1
+    },
+    "v1/core/kv_cache": {
+      "v2": 18,
+      "matched_by_v1": 18
+    },
+    "v1/core/sched": {
+      "v2": 4,
+      "matched_by_v1": 4
+    }
+  }
+}

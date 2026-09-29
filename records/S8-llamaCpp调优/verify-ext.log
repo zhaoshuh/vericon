@@ -1,0 +1,28 @@
+N s1 {'threads': '4', 'batch': '256', 'ubatch': '64', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=51.355073
+N s2 {'threads': '4', 'batch': '128', 'ubatch': '128', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=63.621448
+N s3 {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r5)=64.486834
+N s4 {'threads': '4', 'batch': '128', 'ubatch': '256', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=63.469291
+N s5 {'threads': '3', 'batch': '512', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=63.206752
+M s1 {'threads': '4', 'batch': '512', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=62.554643
+M s2 {'threads': '4', 'batch': '128', 'ubatch': '64', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=49.522195
+M s3 {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=64.290564
+M s4 {'threads': '3', 'batch': '512', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=61.714866
+M s5 {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=46.463577
+A s1 {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=69.229433
+A s2 {'threads': '4', 'batch': '128', 'ubatch': '64', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=75.390794
+A s3 {'threads': '4', 'batch': '256', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=74.034104
+A s4 {'threads': '4', 'batch': '256', 'ubatch': '128', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=73.051423
+A s5 {'threads': '3', 'batch': '256', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r5)=63.9981
+S s1 {'threads': '4', 'batch': '128', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r5)=70.438224
+S s2 {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=76.320177
+S s3 {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=74.002172
+S s4 {'threads': '3', 'batch': '128', 'ubatch': '128', 'fa': 'on', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r5)=64.654599
+S s5 {'threads': '3', 'batch': '512', 'ubatch': '128', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r5)=63.259196
+
+| 臂 | 终验 pp256（中位，-r5）|
+|---|---|
+| N | 63.5 |
+| M | 61.7 |
+| A | 73.1 |
+| S | 70.4 |
+DONE -> verification-ext.csv

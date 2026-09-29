@@ -1,0 +1,751 @@
+{
+  "cases": [
+    {
+      "constraint_id": "C222",
+      "type": "enum",
+      "expr": "(enable_dbo == True or ubatch_size > 1) implies parallel_config.all2all_backend in {'deepep_low_latency','deepep_high_throughput','nixl_ep'}",
+      "params": [
+        "enable_dbo",
+        "ubatch_size",
+        "all2all_backend"
+      ],
+      "violation_assignment": {
+        "enable_dbo": true,
+        "all2all_backend": "allgather_reducescatter"
+      },
+      "expected_error_kind": "AssertionError",
+      "rationale": "enable_dbo=True 使 use_ubatching 为真，而 all2all_backend 取默认 allgather_reducescatter，不在允许的 deepep_low_latency/deepep_high_throughput/nixl_ep 集合中；VllmConfig.__post_init__ 中的 assert 在构造期失败。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1934
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1936
+        }
+      ]
+    },
+    {
+      "constraint_id": "C225",
+      "type": "range",
+      "expr": "all(x > 0 for x in compilation_config.compile_ranges_endpoints)",
+      "params": [
+        "compile_ranges_endpoints"
+      ],
+      "violation_assignment": {
+        "compile_ranges_endpoints": [
+          0
+        ]
+      },
+      "expected_error_kind": "AssertionError",
+      "rationale": "端点 0 不满足 x > 0；__post_init__ 调用的 _set_compile_ranges 在构造期执行 assert x > 0，0 直接触发断言失败。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2521
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2523
+        }
+      ]
+    },
+    {
+      "constraint_id": "C227",
+      "type": "enum",
+      "expr": "async_scheduling == True and speculative_config != None implies speculative_config.method in EAGLE/MTP/DraftModel/NGramGPU/DSpark 集合",
+      "params": [
+        "async_scheduling",
+        "speculative_config",
+        "method"
+      ],
+      "violation_assignment": {
+        "async_scheduling": true,
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "method='ngram' 不在 Eagle/NgramGPU(ngram_gpu)/draft_model/dspark 集合中；async_scheduling=True 时 __post_init__ 在构造期直接抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1419
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1424
+        }
+      ]
+    },
+    {
+      "constraint_id": "C228",
+      "type": "mutual_exclusion",
+      "expr": "async_scheduling == True implies speculative_config.disable_padded_drafter_batch == False",
+      "params": [
+        "async_scheduling",
+        "disable_padded_drafter_batch"
+      ],
+      "violation_assignment": {
+        "async_scheduling": true,
+        "speculative_config": {
+          "method": "ngram_gpu",
+          "num_speculative_tokens": 5,
+          "disable_padded_drafter_batch": true
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "ngram_gpu 能通过 method 集合检查，但 disable_padded_drafter_batch=True 与 async_scheduling=True 互斥；构造期在 method 检查之后立即抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1429
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1431
+        }
+      ]
+    },
+    {
+      "constraint_id": "C235",
+      "type": "implication",
+      "expr": "cache_config.mamba_block_size is not None and mamba_block_size != model_config.max_model_len implies cache_config.enable_prefix_caching == True",
+      "params": [
+        "mamba_block_size",
+        "enable_prefix_caching"
+      ],
+      "violation_assignment": {
+        "mamba_block_size": 7,
+        "enable_prefix_caching": false
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "显式设置 mamba_block_size=7（几乎必然不等于模型 max_model_len）却关闭 prefix caching；model_validator validate_mamba_block_size 在构造期抛 ValueError。前提：model_config 存在。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3202
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3204
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3206
+        }
+      ]
+    },
+    {
+      "constraint_id": "C248",
+      "type": "implication",
+      "expr": "cache_config.use_replayssm == True implies model_config.supports_replayssm == True",
+      "params": [
+        "use_replayssm"
+      ],
+      "violation_assignment": {
+        "use_replayssm": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "开启 --use-replayssm，而普通模型（未声明 SupportsReplaySSM 接口）的 supports_replayssm 为 False；model_validator validate_mamba_cached_kernel 在构造期抛 ValueError。前提：model_config 非空且架构未声明 supports_replayssm（通用模型默认如此）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3212
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3217
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 3219
+        }
+      ]
+    },
+    {
+      "constraint_id": "C252",
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies decode_context_parallel_size == 1 and prefill_context_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "decode_context_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_return_routed_experts": true,
+        "prefill_context_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "开启 routed experts 返回的同时设置 PCP=2，两者在构造期不兼容；选择 PCP 而非 DCP 是为了避开 ModelConfig 中 GQA/MQA 的 DCP 前置检查。前提：model_config 存在（enable_return_routed_experts 是 ModelConfig 字段）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1289
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1290
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1293
+        }
+      ]
+    },
+    {
+      "constraint_id": "C253",
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies kv_transfer_config is None or not kv_transfer_config.is_kv_transfer_instance",
+      "params": [
+        "enable_return_routed_experts",
+        "kv_transfer_config"
+      ],
+      "violation_assignment": {
+        "enable_return_routed_experts": true,
+        "kv_connector": "NixlConnector",
+        "kv_role": "kv_both"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "kv_connector + kv_role 构成 KVTransferConfig.is_kv_transfer_instance=True，与 enable_return_routed_experts=True 互斥；__post_init__ 在构造期抛 ValueError。前提：model_config 存在。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1303
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1304
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1307
+        }
+      ]
+    },
+    {
+      "constraint_id": "C254",
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts == True implies pipeline_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "pipeline_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_return_routed_experts": true,
+        "pipeline_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "PP=2 与 enable_return_routed_experts=True 不兼容，__post_init__ 在构造期抛 ValueError。前提：模型支持 PP（否则 ModelConfig.verify_with_parallel_config 的 PP 检查会先触发 NotImplementedError）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1283
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1285
+        }
+      ]
+    },
+    {
+      "constraint_id": "C261",
+      "type": "implication",
+      "expr": "observability_config.per_request_spec_decode_metrics != 'none' implies speculative_config != None",
+      "params": [
+        "per_request_spec_decode_metrics",
+        "speculative_config"
+      ],
+      "violation_assignment": {
+        "per_request_spec_decode_metrics": "summary"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "开启 per-request 投机解码指标（summary）但未启用 speculative_config；__post_init__ 构造期抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1515
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1516
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1519
+        }
+      ]
+    },
+    {
+      "constraint_id": "C266",
+      "type": "implication",
+      "expr": "return_sampling_mask == True implies logprobs_mode == 'processed_logprobs'",
+      "params": [
+        "return_sampling_mask",
+        "logprobs_mode"
+      ],
+      "violation_assignment": {
+        "return_sampling_mask": true,
+        "logprobs_mode": "raw_logprobs",
+        "watermark_config": {
+          "key": 12345
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "return_sampling_mask=True 但 logprobs_mode 仍为 raw_logprobs，_verify_sampling_replay_config 构造期抛 ValueError。额外设置 watermark_config 是为了让 use_v2_model_runner 直接返回 True，绕过前置的 'requires Model Runner V2' 门槛，使目标检查可被触发（源码 vllm/config/vllm.py:684-690）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1129
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1131
+        }
+      ]
+    },
+    {
+      "constraint_id": "C267",
+      "type": "mutual_exclusion",
+      "expr": "return_sampling_mask == True implies not model_config.logits_processors",
+      "params": [
+        "return_sampling_mask",
+        "logits_processors"
+      ],
+      "violation_assignment": {
+        "return_sampling_mask": true,
+        "logits_processors": [
+          "my_module.MyLogitsProcessor"
+        ],
+        "watermark_config": {
+          "key": 12345
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "return_sampling_mask=True 且配置了自定义 logits processor，_verify_sampling_replay_config 构造期抛 ValueError。watermark_config 的作用同 C266：迫使 use_v2_model_runner 返回 True，避免被前置 V2 门槛拦截。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1125
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1127
+        }
+      ]
+    },
+    {
+      "constraint_id": "C271",
+      "type": "inequality",
+      "expr": "speculative_config != None implies scheduler_config.max_num_batched_tokens > speculative_config.max_num_new_slots_for_drafting（由 num_speculative_tokens、parallel_drafting 等推导）",
+      "params": [
+        "max_num_batched_tokens",
+        "num_speculative_tokens"
+      ],
+      "violation_assignment": {
+        "max_num_batched_tokens": 4,
+        "max_num_seqs": 1,
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5,
+          "parallel_drafting": true
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "parallel_drafting=True 的非 draft_model 起草额外需要 K-1=4 个 slot，max_num_batched_tokens=4 不满足严格大于，_set_max_num_scheduled_tokens 在构造期抛错；max_num_seqs=1 用于通过 SchedulerConfig 的 max_num_batched_tokens >= max_num_seqs 检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2119
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2144
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2146
+        }
+      ]
+    },
+    {
+      "constraint_id": "C272",
+      "type": "range",
+      "expr": "speculative_config != None implies scheduler_config.max_num_scheduled_tokens > 0（默认取 max_num_batched_tokens）",
+      "params": [
+        "max_num_scheduled_tokens",
+        "max_num_batched_tokens",
+        "speculative_config"
+      ],
+      "violation_assignment": {
+        "max_num_scheduled_tokens": 0,
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "显式把 max_num_scheduled_tokens 设为 0，启用投机解码时 _set_max_num_scheduled_tokens 在构造期检查 <= 0 并抛 ValueError（字段本身允许 ge=0，因此能进入该分支）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2123
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2125
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 2127
+        }
+      ]
+    },
+    {
+      "constraint_id": "C277",
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.draft_sample_method == 'probabilistic'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "draft_sample_method"
+      ],
+      "violation_assignment": {
+        "watermark_config": {
+          "key": 12345
+        },
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "同时启用 watermark 与投机解码，而 draft_sample_method 取默认值 greedy != probabilistic；_check_watermarking_unsupported 在 __post_init__ 早期（1268 行）抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1154
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1156
+        }
+      ]
+    },
+    {
+      "constraint_id": "C278",
+      "type": "enum",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.method in {'dspark','eagle','eagle3','mtp'}",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "method"
+      ],
+      "violation_assignment": {
+        "watermark_config": {
+          "key": 12345
+        },
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5,
+          "draft_sample_method": "probabilistic"
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "method='ngram' 不在水印允许的自回归模型类投机解码集合 {dspark,eagle,eagle3,mtp} 中；构造期抛 ValueError。draft_sample_method=probabilistic 用于通过前一个检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1171
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1173
+        }
+      ]
+    },
+    {
+      "constraint_id": "C279",
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config != None implies speculative_config.rejection_sample_method == 'standard'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "rejection_sample_method"
+      ],
+      "violation_assignment": {
+        "watermark_config": {
+          "key": 12345
+        },
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5,
+          "draft_sample_method": "probabilistic",
+          "rejection_sample_method": "block"
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "rejection_sample_method='block' != 'standard'，与 watermark + 投机解码不兼容；构造期抛 ValueError。选择 block 而非 synthetic 以避免 synthetic 需要额外接受率参数。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1159
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1161
+        }
+      ]
+    },
+    {
+      "constraint_id": "C280",
+      "type": "implication",
+      "expr": "watermark_config != None and speculative_config.parallel_drafting == True implies speculative_config.method == 'dspark'",
+      "params": [
+        "watermark_config",
+        "speculative_config",
+        "parallel_drafting",
+        "method"
+      ],
+      "violation_assignment": {
+        "watermark_config": {
+          "key": 12345
+        },
+        "speculative_config": {
+          "method": "ngram",
+          "num_speculative_tokens": 5,
+          "draft_sample_method": "probabilistic",
+          "parallel_drafting": true
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "parallel_drafting=True 且 method='ngram' != 'dspark'，水印场景不支持并行投机起草；构造期抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1165
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1166
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1169
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "constraint_id": "C213",
+      "reason": "非构造期校验：headless 与 LB 模式一致性在 vllm/v1/engine/utils.py 的远程 engine 启动路径检查"
+    },
+    {
+      "constraint_id": "C214",
+      "reason": "非构造期校验：device_ids 数量检查在 vllm/v1/engine/utils.py 本地 DP 进程启动路径"
+    },
+    {
+      "constraint_id": "C215",
+      "reason": "非构造期校验：lora_request 校验在 vllm/v1/engine/input_processor.py 请求期"
+    },
+    {
+      "constraint_id": "C216",
+      "reason": "非构造期校验：DP 收缩的专家数判断在 vllm/v1/engine/core_client.py 运行期弹性扩缩容路径"
+    },
+    {
+      "constraint_id": "C217",
+      "reason": "非构造期校验：prompt_len <= max_model_len 在请求处理期（input_processor）"
+    },
+    {
+      "constraint_id": "C218",
+      "reason": "非构造期校验：生成模型 prompt_len+1 <= max_model_len 在请求处理期"
+    },
+    {
+      "constraint_id": "C219",
+      "reason": "非构造期校验：pooling task 集合校验在请求期（v1/engine/core.py 与 input_processor）"
+    },
+    {
+      "constraint_id": "C220",
+      "reason": "非构造期校验：thinking_token_budget 与 reasoning_config 校验在请求期"
+    },
+    {
+      "constraint_id": "C221",
+      "reason": "非构造期校验：trace_decode_token_ids 与 enable_trace_replay 校验在请求期"
+    },
+    {
+      "constraint_id": "C223",
+      "reason": "依赖模型派生属性 use_mla（ModelConfig property，非可赋值字段），且 ModelConfig.verify_with_parallel_config 的 DCP 前置检查会先于 NIXL assert 触发"
+    },
+    {
+      "constraint_id": "C224",
+      "reason": "NIXL 的 DCP 断言前存在 ModelConfig 对 GQA/MQA 的 DCP 检查（依赖模型 KV head 数与 query/KV head 整除关系），无法用纯配置确定性构造"
+    },
+    {
+      "constraint_id": "C226",
+      "reason": "平台条件：需要 current_platform.is_rocm()，无 GPU（CPU 平台）环境无法构造"
+    },
+    {
+      "constraint_id": "C229",
+      "reason": "HiSparse 分支前有 current_platform.is_cuda() 门槛，无 GPU 环境会先报 'HiSparse currently requires NVIDIA CUDA'，无法隔离目标检查"
+    },
+    {
+      "constraint_id": "C230",
+      "reason": "同 C229：HiSparse 的 CUDA 平台门槛先于 PP 检查触发"
+    },
+    {
+      "constraint_id": "C231",
+      "reason": "同 C229：HiSparse 的 CUDA 平台门槛先于 hybrid KV manager 检查触发"
+    },
+    {
+      "constraint_id": "C232",
+      "reason": "HiSparse 的 CUDA 平台门槛 + 需要带 index_topk 的 DSA 模型（hf_config 属性），无法构造"
+    },
+    {
+      "constraint_id": "C233",
+      "reason": "依赖 model_config.use_mla 属性（由模型架构/HF 配置派生，非可赋值字段）"
+    },
+    {
+      "constraint_id": "C234",
+      "reason": "需要可构造的 EAGLE/MTP 类 draft checkpoint（use_eagle() 为方法级判断但 SpeculativeConfig 构造需要真实 draft 模型路径），离线无法构造"
+    },
+    {
+      "constraint_id": "C236",
+      "reason": "非构造期校验：validate_block_size 仅在 vllm/v1/engine/core.py 的 EngineCore 启动路径被调用，不在 __post_init__/EngineArgs 构造期"
+    },
+    {
+      "constraint_id": "C237",
+      "reason": "依赖环境变量 VLLM_USE_V2_MODEL_RUNNER（use_v2_model_runner 属性），非配置字段可构造"
+    },
+    {
+      "constraint_id": "C238",
+      "reason": "需先通过 validate_mamba_cached_kernel 中的 supports_replayssm 检查且架构为 Kimi-K3（use_kda_recoverssm=True 要求 use_replayssm + num_speculative_tokens>0 与专用模型），无法纯配置构造"
+    },
+    {
+      "constraint_id": "C239",
+      "reason": "同 C238：需 ReplaySSM/Kimi-K3 专用模型才能抵达该分支"
+    },
+    {
+      "constraint_id": "C240",
+      "reason": "同 C238：需 ReplaySSM/Kimi-K3 专用模型才能抵达该分支"
+    },
+    {
+      "constraint_id": "C241",
+      "reason": "同 C238：需 ReplaySSM/Kimi-K3 专用模型才能抵达该分支"
+    },
+    {
+      "constraint_id": "C242",
+      "reason": "依赖 model_config.architecture（模型派生 property），且要求 use_kda_recoverssm 的模型为 ReplaySSM 支持的 Kimi 架构"
+    },
+    {
+      "constraint_id": "C243",
+      "reason": "需要模型声明 SupportsReplaySSM（validate_mamba_cached_kernel 的 C248 前置检查会先触发）"
+    },
+    {
+      "constraint_id": "C244",
+      "reason": "依赖环境变量 VLLM_USE_V2_MODEL_RUNNER（use_v2_model_runner 属性），非配置字段可构造"
+    },
+    {
+      "constraint_id": "C245",
+      "reason": "需要模型声明 SupportsReplaySSM（前置检查会先触发）"
+    },
+    {
+      "constraint_id": "C246",
+      "reason": "需要模型声明 SupportsReplaySSM（前置检查会先触发）"
+    },
+    {
+      "constraint_id": "C247",
+      "reason": "需要模型声明 SupportsReplaySSM（前置检查会先触发）"
+    },
+    {
+      "constraint_id": "C249",
+      "reason": "仅在 current_platform.support_static_graph_mode() 为真（CUDA/ROCm）时执行 _set_cudagraph_sizes，无 GPU 环境不可构造"
+    },
+    {
+      "constraint_id": "C250",
+      "reason": "assert 位于 current_platform.is_cuda_alike() 分支内，无 GPU（CPU 平台）环境不执行"
+    },
+    {
+      "constraint_id": "C251",
+      "reason": "非构造期校验：同一 validate_block_size 仅在 EngineCore 启动路径调用"
+    },
+    {
+      "constraint_id": "C255",
+      "reason": "MambaConfig.__post_init__ 前置 CUDA 平台/算力检查（无 GPU 环境先报 stochastic rounding CUDA-only 错误），无法隔离目标检查"
+    },
+    {
+      "constraint_id": "C256",
+      "reason": "仅在 support_static_graph_mode() 平台执行的 _set_cudagraph_sizes 中检查"
+    },
+    {
+      "constraint_id": "C257",
+      "reason": "依赖 model_config.architecture（模型派生 property）与 hf_config.engram_layer_ids（模型 HF 配置属性）"
+    },
+    {
+      "constraint_id": "C258",
+      "reason": "量化 dtype 检查在 _get_quantization_config 中，依赖 get_quant_config 读取 checkpoint 量化配置/文件，无法用纯配置字段确定性构造"
+    },
+    {
+      "constraint_id": "C259",
+      "reason": "依赖环境变量 VLLM_WORKER_MULTIPROC_METHOD 与多模态模型（model_config.multimodal_config 非 None）"
+    },
+    {
+      "constraint_id": "C260",
+      "reason": "需要多模态模型（model_config.multimodal_config 非 None），纯文本模型不满足链条件"
+    },
+    {
+      "constraint_id": "C262",
+      "reason": "_validate_profiler_config 前有 current_platform.is_cuda() 门槛，无 GPU 环境先报 'Proton profiler supports NVIDIA CUDA only'"
+    },
+    {
+      "constraint_id": "C263",
+      "reason": "同 C262：Proton 的 CUDA 平台门槛先于 graph attribution / pcsampling 检查"
+    },
+    {
+      "constraint_id": "C264",
+      "reason": "平台条件：Proton profiler 需要 NVIDIA CUDA，无 GPU 环境不可构造"
+    },
+    {
+      "constraint_id": "C265",
+      "reason": "依赖环境变量 VLLM_USE_V2_MODEL_RUNNER（use_v2_model_runner 属性）"
+    },
+    {
+      "constraint_id": "C268",
+      "reason": "需要 diffusion 模型（model_config.is_diffusion 为模型派生属性），无法纯配置构造"
+    },
+    {
+      "constraint_id": "C269",
+      "reason": "需先通过水印/自回归 method 检查（要求可构造的 eagle/mtp 类 draft checkpoint）才能抵达采样回放检查，离线无法构造"
+    },
+    {
+      "constraint_id": "C270",
+      "reason": "need_disable_hybrid_kv_cache_manager 为平台能力/connector/模型多条件聚合的运行期判定，无法用纯参数表达"
+    },
+    {
+      "constraint_id": "C273",
+      "reason": "需要 Model Runner V2 且 spec method 为 V2 兼容（ngram 类会先被 model runner 兼容性校验拦截），自适应验证检查位于 runner 校验之后"
+    },
+    {
+      "constraint_id": "C274",
+      "reason": "同 C273：LoRA 检查位于 _validate_adaptive_verification 内，但需先通过 model runner 兼容性校验（依赖环境/spec method）"
+    },
+    {
+      "constraint_id": "C275",
+      "reason": "同 C273；且 full cudagraph 校验先于 PP 校验，无 GPU 平台 cudagraph_mode 会被强制为 NONE，无法隔离 PP 检查"
+    },
+    {
+      "constraint_id": "C276",
+      "reason": "需要可构造的自回归 draft checkpoint（eagle/mtp 等 method 才能通过水印 method 检查），ngram 类会先被 method 检查拦截"
+    },
+    {
+      "constraint_id": "C281",
+      "reason": "仅在 support_static_graph_mode() 平台执行的 _set_cudagraph_sizes 中检查"
+    },
+    {
+      "constraint_id": "C282",
+      "reason": "需要模型路径为 S3/GCS/Azure 对象存储 URI（is_runai_obj_uri 判定 model_weights），无法用纯配置字段构造"
+    }
+  ]
+}

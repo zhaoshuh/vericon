@@ -1,0 +1,1449 @@
+{
+  "cases": [
+    {
+      "constraint_id": "C072",
+      "type": "arithmetic",
+      "expr": "(total_num_attention_heads // total_num_kv_heads) % decode_context_parallel_size == 0",
+      "params": [
+        "total_num_attention_heads",
+        "total_num_kv_heads",
+        "decode_context_parallel_size"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "hf_overrides": {
+          "num_attention_heads": 14,
+          "num_key_value_heads": 2
+        },
+        "tensor_parallel_size": 14,
+        "decode_context_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "钉住 14 个 Q head / 2 个 KV head 后 num_q_per_kv=7，DCP=2 时 7%2≠0；TP=14>KV=2 且 DCP=2<=TP//KV=7，前面的 DCP 两条检查都通过，只有这条整除校验触发（VllmConfig→ModelConfig.verify_with_parallel_config）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1468
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1467
+        }
+      ]
+    },
+    {
+      "constraint_id": "C073",
+      "type": "arithmetic",
+      "expr": "decode_context_parallel_size <= tensor_parallel_size // total_num_kv_heads",
+      "params": [
+        "decode_context_parallel_size",
+        "tensor_parallel_size",
+        "total_num_kv_heads"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "hf_overrides": {
+          "num_attention_heads": 14,
+          "num_key_value_heads": 2
+        },
+        "tensor_parallel_size": 14,
+        "decode_context_parallel_size": 14
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "max_dcp_size = 14//2 = 7，DCP=14 > 7；同时 14%14==0 且 TP=14>KV=2，绕过 ParallelConfig 的 tp%dcp 与 C074 检查，只触发本约束。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1457
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1458
+        }
+      ]
+    },
+    {
+      "constraint_id": "C074",
+      "type": "inequality",
+      "expr": "decode_context_parallel_size > 1 且模型非 MLA ⇒ tensor_parallel_size > total_num_kv_heads",
+      "params": [
+        "decode_context_parallel_size",
+        "tensor_parallel_size",
+        "total_num_kv_heads"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "hf_overrides": {
+          "num_attention_heads": 14,
+          "num_key_value_heads": 2
+        },
+        "tensor_parallel_size": 2,
+        "decode_context_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "TP=2 <= 模型 KV head 数 2，违反 DCP 要求 TP 大于总 KV head 数；tp%dcp==0 所以 ParallelConfig 层不先报错（Qwen 非 MLA，DCP=2>1 进入该分支）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1448
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1449
+        }
+      ]
+    },
+    {
+      "constraint_id": "C075",
+      "type": "implication",
+      "expr": "enable_cumem_allocator == True ⇒ 平台支持 cumem allocator",
+      "params": [
+        "enable_cumem_allocator"
+      ],
+      "violation_assignment": {
+        "enable_cumem_allocator": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "无 GPU/CPU 平台上 current_platform.is_cumem_allocator_available() 为 False（cumem 扩展不可用），显式开启在 ModelConfig.__post_init__ 早期即被拒绝，无需加载 HF 配置。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 624
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 626
+        }
+      ]
+    },
+    {
+      "constraint_id": "C076",
+      "type": "implication",
+      "expr": "enable_sleep_mode == True ⇒ 平台支持 sleep mode；且 CUDA/ROCm 平台上 enable_cumem_allocator 会被自动置 True",
+      "params": [
+        "enable_sleep_mode",
+        "enable_cumem_allocator"
+      ],
+      "violation_assignment": {
+        "enable_sleep_mode": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "CPU 平台上 is_sleep_mode_available() 返回 False（仅 CUDA/ROCm/XPU 可用），开启 sleep mode 直接报错；该检查在 ModelConfig.__post_init__ 中先于模型加载。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 614
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 616
+        }
+      ]
+    },
+    {
+      "constraint_id": "C077",
+      "type": "range",
+      "expr": "isinstance(max_model_len, int) 且 max_model_len >= 1",
+      "params": [
+        "max_model_len"
+      ],
+      "violation_assignment": {
+        "max_model_len": -1
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "max_model_len 字段本身没有 gt 约束，-1 通过 pydantic 类型校验与 get_and_verify_max_len，最终由 model_validator 中「必须为正整数」的显式检查拒绝。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 948
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 949
+        }
+      ]
+    },
+    {
+      "constraint_id": "C078",
+      "type": "type",
+      "expr": "isinstance(tokenizer, str)（tokenizer 必须可解析为路径或 HF 模型 ID）",
+      "params": [
+        "tokenizer"
+      ],
+      "violation_assignment": {
+        "tokenizer": 123
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "tokenizer 声明为 str 字段，赋整数会在字段校验阶段被 pydantic 拒绝（ValidationError 是 ValueError 子类），自定义的 post-init 报错不可达但违反配置同样无法构造成功。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 942
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 943
+        }
+      ]
+    },
+    {
+      "constraint_id": "C079",
+      "type": "implication",
+      "expr": "model_type in {'gemma2', 'gemma3', 'gemma3_text', 'glm4'} ⇒ dtype != torch.float16",
+      "params": [
+        "model_type",
+        "dtype"
+      ],
+      "violation_assignment": {
+        "model": "google/gemma-2-2b",
+        "dtype": "float16"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "gemma-2 的 model_type 为 gemma2，属 _FLOAT16_NOT_SUPPORTED_MODELS；dtype=float16 在 __post_init__ 解析 dtype 时触发 _check_valid_dtype 报错（只读 HF config，不加载权重）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 2268
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 2353
+        }
+      ]
+    },
+    {
+      "constraint_id": "C080",
+      "type": "implication",
+      "expr": "multimodal_config.mm_tensor_ipc == 'torch_shm' ⇒ pipeline_parallel_size == 1 且 tensor_parallel_size == 1 且 prefill_context_parallel_size == 1 且 data_parallel_size == 1",
+      "params": [
+        "mm_tensor_ipc",
+        "multimodal_config",
+        "data_parallel_size",
+        "tensor_parallel_size",
+        "pipeline_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_tensor_ipc": "torch_shm",
+        "data_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "多模态模型（Qwen2.5-VL）下 mm_tensor_ipc='torch_shm' 且 world_size_across_dp=PP×TP×PCP×DP=2>1，VllmConfig→ModelConfig.verify_with_parallel_config 直接拒绝；用 DP=2 可避开 TP 对注意 力头数整除的前置检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1483
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1486
+        }
+      ]
+    },
+    {
+      "constraint_id": "C081",
+      "type": "mutual_exclusion",
+      "expr": "not (enable_prompt_embeds == True and is_encoder_decoder == True)",
+      "params": [
+        "enable_prompt_embeds",
+        "is_encoder_decoder"
+      ],
+      "violation_assignment": {
+        "model": "google-t5/t5-small",
+        "enable_prompt_embeds": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "t5-small 是 encoder-decoder 模型（is_encoder_decoder=True），与 --enable-prompt-embeds 互斥，model_validator 显式报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 954
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 957
+        }
+      ]
+    },
+    {
+      "constraint_id": "C082",
+      "type": "implication",
+      "expr": "pipeline_parallel_size > 1 ⇒ 模型实现 SupportsPP 接口（registry.is_pp_supported_model(architectures)）",
+      "params": [
+        "pipeline_parallel_size",
+        "architectures"
+      ],
+      "violation_assignment": {
+        "model": "intfloat/e5-small-v2",
+        "pipeline_parallel_size": 2
+      },
+      "expected_error_kind": "NotImplementedError",
+      "rationale": "e5-small-v2 的 BertEmbeddingModel 未实现 SupportsPP（model_info.supports_pp=False），PP=2 时 verify_with_parallel_config 抛 NotImplementedError；PP 检查前只有 attention head 数 % TP（TP=1）检查，不会提前拦截。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1437
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1440
+        }
+      ]
+    },
+    {
+      "constraint_id": "C084",
+      "type": "implication",
+      "expr": "quantization ∈ DEPRECATED_QUANTIZATION_METHODS ⇒ allow_deprecated_quantization == True",
+      "params": [
+        "quantization",
+        "allow_deprecated_quantization"
+      ],
+      "violation_assignment": {
+        "quantization": "fbgemm_fp8",
+        "allow_deprecated_quantization": false
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "fbgemm_fp8 在 me_quant.QUANTIZATION_METHODS（合法集合）内，同时属于 DEPRECATED_QUANTIZATION_METHODS；未显式放行时 _verify_quantization 报错（非量化 checkpoint 不会触发 mismatch 分支）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1347
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1355
+        }
+      ]
+    },
+    {
+      "constraint_id": "C085",
+      "type": "enum",
+      "expr": "quantization ∈ QUANTIZATION_METHODS（supported_quantization）",
+      "params": [
+        "quantization",
+        "model"
+      ],
+      "violation_assignment": {
+        "quantization": "___invalid___"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "quantization 字段允许任意字符串（QuantizationMethods | str），域外值会走到 _verify_quantization 的「Unknown quantization method」显式检查；非量化模型 quant_cfg 为 None，不触发与 checkpoint 的 mismatch 分支。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1340
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1341
+        }
+      ]
+    },
+    {
+      "constraint_id": "C088",
+      "type": "mutual_exclusion",
+      "expr": "runner_type == 'pooling' ⇒ not (renderer_num_workers > 1 and mm_processor_cache_gb > 0)",
+      "params": [
+        "renderer_num_workers",
+        "mm_processor_cache_gb",
+        "runner_type",
+        "multimodal_config"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "runner": "pooling",
+        "convert": "embed",
+        "renderer_num_workers": 2,
+        "mm_processor_cache_gb": 4
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "多模态模型显式 runner=pooling 并以 convert=embed 通过 runner 转换检查后，renderer_num_workers=2 与 mm_processor_cache_gb=4>0 同时成立，__post_init__ 的多模态缓存/worker 互斥检查触发。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 843
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 847
+        }
+      ]
+    },
+    {
+      "constraint_id": "C089",
+      "type": "implication",
+      "expr": "runner_type == 'pooling' 且模型非 pooling 模型 ⇒ convert ∈ {'embed', 'classify'}",
+      "params": [
+        "runner",
+        "runner_type",
+        "convert"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "runner": "pooling",
+        "convert": "none"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "Qwen2.5-0.5B 是纯生成模型，runner=pooling 时默认 convert 会是 embed，但显式 convert=none 不在 pooling 允许转换器 {embed,classify} 内，直接报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 677
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 681
+        }
+      ]
+    },
+    {
+      "constraint_id": "C090",
+      "type": "arithmetic",
+      "expr": "total_num_attention_heads % tensor_parallel_size == 0",
+      "params": [
+        "total_num_attention_heads",
+        "tensor_parallel_size"
+      ],
+      "violation_assignment": {
+        "hf_overrides": {
+          "num_attention_heads": 14
+        },
+        "tensor_parallel_size": 5
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "钉住 attention heads=14，TP=5 时 14%5=4≠0；该检查是 verify_with_parallel_config 的第一条（PP=1、DCP=1 不干扰），直接报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 1426
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 1427
+        }
+      ]
+    },
+    {
+      "constraint_id": "C092",
+      "type": "implication",
+      "expr": "模型仅支持 pooling 且不支持生成 ⇒ runner not in {'draft', 'generate'}（应使用 runner='pooling' 或 'auto'）",
+      "params": [
+        "runner",
+        "runner_type"
+      ],
+      "violation_assignment": {
+        "model": "intfloat/e5-small-v2",
+        "runner": "draft"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "e5-small-v2 是纯 embedding（pooling-only）模型，显式 runner=draft 解析后落在 draft，__post_init__ 明确拒绝 embedding 模型的 draft/generate runner。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/model.py",
+          "line": 666
+        },
+        {
+          "file": "vllm/config/model.py",
+          "line": 668
+        }
+      ]
+    },
+    {
+      "constraint_id": "C093",
+      "type": "implication",
+      "expr": "(mm_encoder_fp8_scale_path is not None or mm_encoder_fp8_scale_save_path is not None) → mm_encoder_attn_dtype == 'fp8'",
+      "params": [
+        "mm_encoder_fp8_scale_path",
+        "mm_encoder_fp8_scale_save_path",
+        "mm_encoder_attn_dtype"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_encoder_fp8_scale_path": "dummy_scale.pt"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "mm_encoder_attn_dtype 默认 None（≠'fp8'）却显式给 scale 加载路径，MultiModalConfig 的 model_validator 先于文件存在性检查报错；带多模态模型可确保 ModelConfig 路径也会构造 MultiModalConfig。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 310
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 314
+        }
+      ]
+    },
+    {
+      "constraint_id": "C094",
+      "type": "enum",
+      "expr": "mm_encoder_attn_backend != 'xformers'（该 backend 已移除）",
+      "params": [
+        "mm_encoder_attn_backend"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_encoder_attn_backend": "xformers"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "字段 before-validator 对大小写不敏感的 'xformers' 直接抛 ValueError（PR #29262 已移除该后端）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 285
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 286
+        }
+      ]
+    },
+    {
+      "constraint_id": "C095",
+      "type": "type",
+      "expr": "mm_encoder_attn_backend is None or isinstance(mm_encoder_attn_backend, (str, AttentionBackendEnum))",
+      "params": [
+        "mm_encoder_attn_backend"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_encoder_attn_backend": 123
+      },
+      "expected_error_kind": "AssertionError",
+      "rationale": "before-validator 先放行 None/枚举，再 assert isinstance(value, str)，整数 123 触发 AssertionError（字段是 Union 但 validator 在类型转换前执行）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 291
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 294
+        }
+      ]
+    },
+    {
+      "constraint_id": "C096",
+      "type": "mutual_exclusion",
+      "expr": "mm_encoder_fp8_scale_path ⊥ mm_encoder_fp8_scale_save_path",
+      "params": [
+        "mm_encoder_fp8_scale_path",
+        "mm_encoder_fp8_scale_save_path"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_encoder_attn_dtype": "fp8",
+        "mm_encoder_fp8_scale_path": "dummy_scale.pt",
+        "mm_encoder_fp8_scale_save_path": "dummy_save_dir"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "dtype=fp8 时同时给加载与保存路径，互斥校验在路径存在性检查之前触发（保存需动态缩放，与加载静态 scale 冲突）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 319
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 323
+        }
+      ]
+    },
+    {
+      "constraint_id": "C098",
+      "type": "implication",
+      "expr": "mm_shm_cache_max_object_size_mb != 默认值(128) → mm_processor_cache_type == 'shm'",
+      "params": [
+        "mm_shm_cache_max_object_size_mb",
+        "mm_processor_cache_type"
+      ],
+      "violation_assignment": {
+        "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "mm_processor_cache_type": "lru",
+        "mm_shm_cache_max_object_size_mb": 256
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "缓存类型保持默认 'lru' 却改动只属于 shm 缓存的 128 上限，MultiModalConfig 的 model_validator 直接拒绝。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 301
+        },
+        {
+          "file": "vllm/config/multimodal.py",
+          "line": 305
+        }
+      ]
+    },
+    {
+      "constraint_id": "C099",
+      "type": "implication",
+      "expr": "collect_detailed_traces 非空 → otlp_traces_endpoint 已设置（非空）",
+      "params": [
+        "collect_detailed_traces",
+        "otlp_traces_endpoint"
+      ],
+      "violation_assignment": {
+        "collect_detailed_traces": [
+          "model"
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "collect_detailed_traces=['model']（合法枚举值）而 otlp_traces_endpoint 保持默认 None，ObservabilityConfig 的 model_validator 报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/observability.py",
+          "line": 167
+        },
+        {
+          "file": "vllm/config/observability.py",
+          "line": 168
+        }
+      ]
+    },
+    {
+      "constraint_id": "C100",
+      "type": "inequality",
+      "expr": "offload_backend == 'prefetch' or offload_group_size > 0 → offload_num_in_group <= offload_group_size",
+      "params": [
+        "offload_num_in_group",
+        "offload_group_size",
+        "offload_backend"
+      ],
+      "violation_assignment": {
+        "offload_backend": "prefetch",
+        "prefetch": {
+          "offload_group_size": 2,
+          "offload_num_in_group": 3
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "prefetch 后端下每组只含 2 层却要求预取组内 3 层，NumInGroup > GroupSize，OffloadConfig 的 model_validator 报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/offload.py",
+          "line": 100
+        },
+        {
+          "file": "vllm/config/offload.py",
+          "line": 102
+        }
+      ]
+    },
+    {
+      "constraint_id": "C101",
+      "type": "inequality",
+      "expr": "offload_backend == 'prefetch' or offload_group_size > 0 → offload_prefetch_step >= 1",
+      "params": [
+        "offload_prefetch_step",
+        "offload_group_size",
+        "offload_backend"
+      ],
+      "violation_assignment": {
+        "offload_backend": "prefetch",
+        "prefetch": {
+          "offload_group_size": 4,
+          "offload_num_in_group": 1,
+          "offload_prefetch_step": 0
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "prefetch 开启时 offload_prefetch_step=0（字段允许 ge=0，不会被字段约束拦下），OffloadConfig 的 model_validator 要求 >=1 并报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/offload.py",
+          "line": 107
+        },
+        {
+          "file": "vllm/config/offload.py",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "constraint_id": "C102",
+      "type": "implication",
+      "expr": "(numa_bind_nodes is not None or numa_bind_cpus is not None) ⇒ numa_bind == True",
+      "params": [
+        "numa_bind",
+        "numa_bind_nodes",
+        "numa_bind_cpus"
+      ],
+      "violation_assignment": {
+        "numa_bind": false,
+        "numa_bind_nodes": [
+          0
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "numa_bind_nodes=[0] 内容合法（字段校验通过），但 numa_bind=False 时手工绑定会被静默忽略，model_validator 因此显式报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 520
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 523
+        }
+      ]
+    },
+    {
+      "constraint_id": "C103",
+      "type": "range",
+      "expr": "0 <= data_parallel_rank < data_parallel_size",
+      "params": [
+        "data_parallel_rank",
+        "data_parallel_size"
+      ],
+      "violation_assignment": {
+        "data_parallel_size": 2,
+        "data_parallel_rank": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "DP=2>1 时进入 __post_init__ 的 rank 区间检查，rank=2 不满足 [0,2)，直接报错（字段 ge=0 只拦负数）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 929
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 930
+        }
+      ]
+    },
+    {
+      "constraint_id": "C104",
+      "type": "range",
+      "expr": "all(len(cpuset) > 0 for cpuset in numa_bind_cpus)",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "violation_assignment": {
+        "numa_bind_cpus": [
+          ""
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "numa_bind_cpus 每个条目对应一张 GPU，空字符串条目在字段校验阶段即被拒绝。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 468
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 469
+        }
+      ]
+    },
+    {
+      "constraint_id": "C105",
+      "type": "range",
+      "expr": "all(node >= 0 for node in numa_bind_nodes)",
+      "params": [
+        "numa_bind_nodes"
+      ],
+      "violation_assignment": {
+        "numa_bind_nodes": [
+          -1
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "numa_bind_nodes 传入负的 NUMA 节点索引 -1，字段校验阶段直接拒绝。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 455
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 456
+        }
+      ]
+    },
+    {
+      "constraint_id": "C106",
+      "type": "implication",
+      "expr": "data_parallel_external_lb == True ⇒ data_parallel_size > 1",
+      "params": [
+        "data_parallel_external_lb",
+        "data_parallel_size"
+      ],
+      "violation_assignment": {
+        "data_parallel_size": 1,
+        "data_parallel_external_lb": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "external LB 只有多 DP rank 才有意义；DP=1 时开启 external_lb，model_validator 报错（该检查在 __post_init__ 之后执行，不受 DP 分支影响）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 515
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 516
+        }
+      ]
+    },
+    {
+      "constraint_id": "C107",
+      "type": "inequality",
+      "expr": "data_parallel_size_local <= data_parallel_size",
+      "params": [
+        "data_parallel_size_local",
+        "data_parallel_size"
+      ],
+      "violation_assignment": {
+        "data_parallel_size": 1,
+        "data_parallel_size_local": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "本地 DP 组数 2 > 全局 DP 规模 1，model_validator 报错（字段 ge=0 允许 2）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 509
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 510
+        }
+      ]
+    },
+    {
+      "constraint_id": "C108",
+      "type": "type",
+      "expr": "distributed_executor_backend ∈ (None, str, Executor 子类或导入路径)",
+      "params": [
+        "distributed_executor_backend"
+      ],
+      "violation_assignment": {
+        "distributed_executor_backend": 123
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "字段声明为 str|枚举|type|None，整数 123 在 pydantic 字段校验阶段被拒（ValidationError⊂ValueError）；显式「非 Executor 类」分支需要 Python 类对象，无法用 JSON 字面量表达。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1062
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1069
+        }
+      ]
+    },
+    {
+      "constraint_id": "C110",
+      "type": "inequality",
+      "expr": "elastic_ep_max_dp_size >= data_parallel_size",
+      "params": [
+        "elastic_ep_max_dp_size",
+        "data_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": true,
+        "elastic_ep_max_dp_size": 2,
+        "data_parallel_size": 4,
+        "eplb_config": {
+          "use_async": false
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "elastic_ep_max_dp_size=2 < data_parallel_size=4；__post_init__ 先于 model_validator 执行，因此该检查在 CPU 环境的 EPLB 平台校验之前触发（use_async=False 绕过 NIXL 依赖检查）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 954
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 955
+        }
+      ]
+    },
+    {
+      "constraint_id": "C111",
+      "type": "implication",
+      "expr": "enable_dbo 或 ubatch_size > 1 ⇒ min(dbo_decode_token_threshold, dbo_prefill_token_threshold) >= (2 if enable_dbo else ubatch_size)",
+      "params": [
+        "enable_dbo",
+        "ubatch_size",
+        "dbo_decode_token_threshold",
+        "dbo_prefill_token_threshold"
+      ],
+      "violation_assignment": {
+        "enable_dbo": true,
+        "dbo_decode_token_threshold": 1
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "enable_dbo=True 时 num_ubatches=2，decode 阈值 1（字段 ge=0 允许）< 2，_verify_args 报错要求阈值至少达到微批个数。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1093
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1097
+        }
+      ]
+    },
+    {
+      "constraint_id": "C112",
+      "type": "implication",
+      "expr": "enable_elastic_ep == True ⇒ enable_eplb == True",
+      "params": [
+        "enable_elastic_ep",
+        "enable_eplb"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": false
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "弹性 EP 必须与 EPLB 搭配；enable_eplb=False 时 __post_init__ 的 elastic_ep 分支第一条检查即报错，不涉及 CUDA 平台校验。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 887
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 888
+        }
+      ]
+    },
+    {
+      "constraint_id": "C113",
+      "type": "mutual_exclusion",
+      "expr": "enable_elastic_ep == True ⇒ not data_parallel_external_lb and not data_parallel_hybrid_lb",
+      "params": [
+        "enable_elastic_ep",
+        "data_parallel_external_lb",
+        "data_parallel_hybrid_lb"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": true,
+        "data_parallel_external_lb": true,
+        "data_parallel_size": 2,
+        "eplb_config": {
+          "use_async": false
+        }
+      },
+      "expected_error_kind": "NotImplementedError",
+      "rationale": "enable_eplb=True 与 use_async=False 先通过 elastic_ep 分支前两条检查，external_lb=True 触发 __post_init__ 的 NotImplementedError；该分支先于 model_validator 的 EPLB 平台检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 894
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 895
+        }
+      ]
+    },
+    {
+      "constraint_id": "C114",
+      "type": "implication",
+      "expr": "enable_elastic_ep == True ⇒ pipeline_parallel_size == 1",
+      "params": [
+        "enable_elastic_ep",
+        "pipeline_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": true,
+        "pipeline_parallel_size": 2,
+        "eplb_config": {
+          "use_async": false
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "弹性 EP 不支持流水线并行，PP=2 时 __post_init__ 在 external_lb/平台校验之前报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 889
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 890
+        }
+      ]
+    },
+    {
+      "constraint_id": "C115",
+      "type": "implication",
+      "expr": "enable_eplb == False ⇒ eplb_config.num_redundant_experts == 0",
+      "params": [
+        "enable_eplb",
+        "eplb_config",
+        "num_redundant_experts"
+      ],
+      "violation_assignment": {
+        "enable_eplb": false,
+        "eplb_config": {
+          "num_redundant_experts": 8
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "未开 EPLB 却设置 8 个冗余专家，model_validator 的 else 分支报错；该路径不依赖 CUDA 平台。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 550
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 551
+        }
+      ]
+    },
+    {
+      "constraint_id": "C118",
+      "type": "implication",
+      "expr": "enable_fault_tolerance == True ⇒ API 进程数 <= 1（即 --api-server-count=1）",
+      "params": [
+        "enable_fault_tolerance"
+      ],
+      "violation_assignment": {
+        "enable_fault_tolerance": true,
+        "_api_process_count": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "enable_fault_tolerance=True 时 _api_process_count 必须为 1（字段 gt=0 允许 2），model_validator 因 2>1 报错；该内部字段与 EngineArgs 同名可传。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 494
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 497
+        }
+      ]
+    },
+    {
+      "constraint_id": "C119",
+      "type": "implication",
+      "expr": "log_balancedness == True ⇒ log_balancedness_interval > 0",
+      "params": [
+        "log_balancedness",
+        "log_balancedness_interval"
+      ],
+      "violation_assignment": {
+        "log_balancedness": true,
+        "log_balancedness_interval": 0
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "interval=0 先被字段级 Field(gt=0) 拒绝（pydantic ValidationError⊂ValueError），与并行配置中该显式检查语义一致（图节点亦标注为重复校验）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 113
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 114
+        }
+      ]
+    },
+    {
+      "constraint_id": "C120",
+      "type": "implication",
+      "expr": "nnodes > 1 ⇒ distributed_executor_backend in {'mp', 'uni', 'external_launcher'}",
+      "params": [
+        "nnodes",
+        "distributed_executor_backend"
+      ],
+      "violation_assignment": {
+        "nnodes": 2,
+        "distributed_executor_backend": "ray"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "多节点部署不允许 ray 后端（ray 自行管理节点），nnodes=2 且后端为 'ray' 时 __post_init__ 直接报错；显式后端不会走 ray 自动探测分支。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1018
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1023
+        }
+      ]
+    },
+    {
+      "constraint_id": "C121",
+      "type": "range",
+      "expr": "numa_bind_cpus 中每个 'start-end' 区间的 start <= end",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "violation_assignment": {
+        "numa_bind_cpus": [
+          "3-1"
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "'3-1' 匹配 numactl CPU-list 正则（合法格式），但区间 start=3 > end=1，字段校验中的升序检查报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 479
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 480
+        }
+      ]
+    },
+    {
+      "constraint_id": "C122",
+      "type": "type",
+      "expr": "numa_bind_cpus 每个条目匹配 numactl CPU 列表语法（如 '0-3' 或 '0,2,4-7'）",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "violation_assignment": {
+        "numa_bind_cpus": [
+          "abc"
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "'abc' 不符合 _NUMACTL_CPUSET_PATTERN（^\\d+(-\\d+)?(,\\d+(-\\d+)?)*$），字段校验报错，因为该值会直接传给 numactl。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 470
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 471
+        }
+      ]
+    },
+    {
+      "constraint_id": "C123",
+      "type": "range",
+      "expr": "numa_bind_cpus 若提供则必须非空（len(numa_bind_cpus) >= 1）",
+      "params": [
+        "numa_bind_cpus"
+      ],
+      "violation_assignment": {
+        "numa_bind_cpus": []
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "空列表 != None，字段校验判定为显式提供但内容为空，报错要求至少一个 CPU 列表。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 464
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 465
+        }
+      ]
+    },
+    {
+      "constraint_id": "C124",
+      "type": "range",
+      "expr": "numa_bind_nodes 若提供则必须非空（len(numa_bind_nodes) >= 1）",
+      "params": [
+        "numa_bind_nodes"
+      ],
+      "violation_assignment": {
+        "numa_bind_nodes": []
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "空列表 != None，字段校验判定为显式提供但内容为空，报错要求至少一个 NUMA 节点。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 453
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 454
+        }
+      ]
+    },
+    {
+      "constraint_id": "C125",
+      "type": "implication",
+      "expr": "ray_workers_use_nsight == True ⇒ distributed_executor_backend == 'ray'",
+      "params": [
+        "ray_workers_use_nsight",
+        "distributed_executor_backend"
+      ],
+      "violation_assignment": {
+        "ray_workers_use_nsight": true,
+        "distributed_executor_backend": "mp"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "nsight profiling 仅适用于 Ray worker；后端显式为 mp 时 use_ray=False，_verify_args 报错（显式 mp 也不会先触发 ray 可用性检查）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1086
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 1087
+        }
+      ]
+    },
+    {
+      "constraint_id": "C126",
+      "type": "mutual_exclusion",
+      "expr": "use_async == True ⇒ communicator not in {'torch_nccl', 'pynccl'}",
+      "params": [
+        "use_async",
+        "communicator"
+      ],
+      "violation_assignment": {
+        "use_async": true,
+        "communicator": "torch_nccl"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "use_async=True（默认）时 torch_nccl 与异步 EPLB 的多流冲突，EPLBConfig 的 model_validator 报错；两个值都在 Literal 域内。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 106
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "constraint_id": "C127",
+      "type": "implication",
+      "expr": "use_async == True ⇒ policy == 'default'",
+      "params": [
+        "use_async",
+        "policy"
+      ],
+      "violation_assignment": {
+        "use_async": true,
+        "policy": "round_robin"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "policy 字段类型为 Literal['default']（当前版本唯一取值），'round_robin' 在字段类型校验阶段即被拒（ValidationError⊂ValueError），model_validator 中的显式分支在公开参数下不可达；配置同样无法构造成功。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 104
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 105
+        }
+      ]
+    },
+    {
+      "constraint_id": "C132",
+      "type": "type",
+      "expr": "device_type == \"cpu\"（CpuPlatform 生效时）",
+      "params": [
+        "device_type"
+      ],
+      "violation_assignment": {
+        "device": "cuda"
+      },
+      "expected_error_kind": "AssertionError",
+      "rationale": "显式 device='cuda' 使 DeviceConfig.device_type='cuda'，但当前平台解析为 CpuPlatform，check_and_update_config 中的 assert device_type=='cpu' 失败（该函数在 VllmConfig.__post_init__ 中调用）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/platforms/cpu.py",
+          "line": 379
+        },
+        {
+          "file": "vllm/config/vllm.py",
+          "line": 1842
+        }
+      ]
+    },
+    {
+      "constraint_id": "C139",
+      "type": "range",
+      "expr": "logit_sigma != 0",
+      "params": [
+        "logit_sigma"
+      ],
+      "violation_assignment": {
+        "logit_sigma": 0
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "logit_sigma=0 会让 (logit-logit_mean)/logit_sigma 除零，PoolerConfig.__post_init__ 直接拒绝。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 132
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 133
+        }
+      ]
+    },
+    {
+      "constraint_id": "C140",
+      "type": "enum",
+      "expr": "pooling_type ∈ SEQ_POOLING_TYPES ∪ TOK_POOLING_TYPES = {CLS, LAST, MEAN, ALL, STEP}",
+      "params": [
+        "pooling_type"
+      ],
+      "violation_assignment": {
+        "pooling_type": "___invalid___"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "pooling_type 是 Literal['CLS','LAST','MEAN','ALL','STEP'] 联合类型，域外字符串在字段校验阶段被拒（ValidationError⊂ValueError），__post_init__ 的 NotImplementedError 分支在公开参数下不可达；违反配置仍无法构造。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 145
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 160
+        }
+      ]
+    },
+    {
+      "constraint_id": "C141",
+      "type": "mutual_exclusion",
+      "expr": "pooling_type ⊥ seq_pooling_type",
+      "params": [
+        "pooling_type",
+        "seq_pooling_type"
+      ],
+      "violation_assignment": {
+        "pooling_type": "CLS",
+        "seq_pooling_type": "MEAN"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "两个入口同时给出（取值都在域内），PoolerConfig.__post_init__ 报「Cannot set both pooling_type and seq_pooling_type」。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 136
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 137
+        }
+      ]
+    },
+    {
+      "constraint_id": "C142",
+      "type": "mutual_exclusion",
+      "expr": "pooling_type ⊥ tok_pooling_type",
+      "params": [
+        "pooling_type",
+        "tok_pooling_type"
+      ],
+      "violation_assignment": {
+        "pooling_type": "ALL",
+        "tok_pooling_type": "STEP"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "通用写法与 token 池化入口同时给出（取值都在域内），PoolerConfig.__post_init__ 报「Cannot set both pooling_type and tok_pooling_type」。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 140
+        },
+        {
+          "file": "vllm/config/pooler.py",
+          "line": 141
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "constraint_id": "C083",
+      "reason": "非构造期校验：get_pooling_task 由 pooling runner / warmup 在 worker 运行期调用，配置构造阶段不触发"
+    },
+    {
+      "constraint_id": "C086",
+      "reason": "依赖具体量化 checkpoint 的 quantization_config 与 override 探测逻辑（模型/权重相关），无法用稳定的纯参数赋值构造"
+    },
+    {
+      "constraint_id": "C087",
+      "reason": "需要既非生成也非 pooling 的模型架构；常见 embedding 模型会先被 C092 的前置 runner 检查拦截，注册表内难以稳定构造"
+    },
+    {
+      "constraint_id": "C091",
+      "reason": "当前版本仅 Qwen3-VL 声明 supported_video_pruning_methods=('evs','vidcom2')，已包含全部合法枚举取值；域内方法无法违反，域外方法只会触发字段类型校验"
+    },
+    {
+      "constraint_id": "C097",
+      "reason": "需加速器平台：CPU 环境下 current_platform.device_type=='cpu' 时 validate_mm_processor_device 提前 return，无法在无 GPU 环境构造"
+    },
+    {
+      "constraint_id": "C109",
+      "reason": "需 CUDA 平台与真实 GPU 数：current_platform.is_cuda() 为假时不执行 device_count 检查（无 GPU 环境不可达）"
+    },
+    {
+      "constraint_id": "C116",
+      "reason": "需 CUDA/ROCm 平台：enable_eplb=True 会先被 model_validator 的平台检查（EPLB only on CUDA/ROCm）拦截，目标检查不可达"
+    },
+    {
+      "constraint_id": "C117",
+      "reason": "需 CUDA/ROCm 平台：同上，enable_eplb 的平台前置校验先于 TP×PCP×DP>1 检查触发"
+    },
+    {
+      "constraint_id": "C128",
+      "reason": "非构造期校验（环境变量路径）：仅当 VLLM_DP_SIZE>1 且构造参数 data_parallel_size==1 时进入 else 分支；显式 DP>1 不会执行该检查"
+    },
+    {
+      "constraint_id": "C129",
+      "reason": "平台相关（XPU）：get_attn_backend_cls 属运行期后端选择，且 CPU/无 XPU 环境不可达"
+    },
+    {
+      "constraint_id": "C130",
+      "reason": "CUDA 运行期后端选择：仅产生告警并降级选择，不抛错（非证伪点）"
+    },
+    {
+      "constraint_id": "C131",
+      "reason": "平台相关（XPU Intel Arc A770）且需真实设备名，无 XPU 环境不可构造"
+    },
+    {
+      "constraint_id": "C133",
+      "reason": "运行期校验：get_attn_backend_cls 在 selector/model runner 初始化时调用，非配置构造期；且需 CUDA 后端实现"
+    },
+    {
+      "constraint_id": "C134",
+      "reason": "运行期校验：CUDA/ROCm 自动挑选 attention backend 发生在后端选择阶段，非配置构造期"
+    },
+    {
+      "constraint_id": "C135",
+      "reason": "运行期校验 + 平台相关（ROCm turboquant 逐层回退），非配置构造期"
+    },
+    {
+      "constraint_id": "C136",
+      "reason": "运行期校验：get_vit_attn_backend 在视觉模型 __init__ 中调用（vision.py→模型构造），非配置构造期"
+    },
+    {
+      "constraint_id": "C137",
+      "reason": "平台相关（CUDA/ROCm）：PCP×DP 互斥检查位于 cuda/rocm 的 check_and_update_config，CPU 平台无该检查"
+    },
+    {
+      "constraint_id": "C138",
+      "reason": "平台相关：仅 XPU/ROCm 声明 supported_quantization 列表；CPU 平台该列表为空，verify_quantization 不做限制"
+    }
+  ]
+}

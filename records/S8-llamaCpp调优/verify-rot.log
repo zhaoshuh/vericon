@@ -1,0 +1,28 @@
+s1 N {'threads': '4', 'batch': '256', 'ubatch': '64', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=38.85867
+s1 M {'threads': '4', 'batch': '512', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=41.645269
+s1 A {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=48.497072
+s1 S {'threads': '4', 'batch': '128', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r3)=63.261003
+s2 N {'threads': '4', 'batch': '128', 'ubatch': '128', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=63.928581
+s2 M {'threads': '4', 'batch': '128', 'ubatch': '64', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=60.634754
+s2 A {'threads': '4', 'batch': '128', 'ubatch': '64', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=58.994172
+s2 S {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=64.429582
+s3 N {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r3)=63.438784
+s3 M {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=73.960486
+s3 A {'threads': '4', 'batch': '256', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=65.073314
+s3 S {'threads': '4', 'batch': '256', 'ubatch': '256', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=63.378552
+s4 N {'threads': '4', 'batch': '128', 'ubatch': '256', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=34.7922
+s4 M {'threads': '3', 'batch': '512', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=42.203983
+s4 A {'threads': '4', 'batch': '256', 'ubatch': '128', 'fa': 'off', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=38.695891
+s4 S {'threads': '3', 'batch': '128', 'ubatch': '128', 'fa': 'on', 'ctk': 'q8_0', 'ctv': 'f16'} -> pp(r3)=45.566823
+s5 N {'threads': '3', 'batch': '512', 'ubatch': '64', 'fa': 'on', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=57.980593
+s5 M {'threads': '4', 'batch': '512', 'ubatch': '256', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=63.024611
+s5 A {'threads': '3', 'batch': '256', 'ubatch': '128', 'fa': 'on', 'ctk': 'f16', 'ctv': 'q8_0'} -> pp(r3)=43.251941
+s5 S {'threads': '3', 'batch': '512', 'ubatch': '128', 'fa': 'off', 'ctk': 'f16', 'ctv': 'f16'} -> pp(r3)=47.182311
+
+| 臂 | 终验(轮转, -r3) 每种子最佳 pp256 | 中位 |
+|---|---|---|
+| N | [38.9, 63.9, 63.4, 34.8, 58.0] | 58.0 |
+| M | [41.6, 60.6, 74.0, 42.2, 63.0] | 60.6 |
+| A | [48.5, 59.0, 65.1, 38.7, 43.3] | 48.5 |
+| S | [63.3, 64.4, 63.4, 45.6, 47.2] | 63.3 |
+DONE ✓

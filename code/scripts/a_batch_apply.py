@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+"""A 批次整改：按第二轮审稿意见修正稿件（只应用 count==1 的替换，逐条报告）"""
+MAIN = "/mnt/f/文献/AgentOps/论文/latex/main.tex"
+COVER = "/mnt/f/文献/AgentOps/论文/latex/cover-letter.txt"
+
+ABS_OLD = "Hand-written configuration knowledge does not last. The tuning systems that serve large language model (LLM) inference engines prune the search space with ``known constraints''---tiny hand-curated rule sets (three rules for SCOOT) that, as we show empirically, \\textbf{decay across engine releases: two of SCOOT's three published rules no longer hold in current vLLM versions} (a runtime guard was removed upstream; a conditional rule lost practical force as defaults changed), and six of six tested folk rules are unenforced on a second engine. We present \\textbf{VeriCon}, a pipeline that (i)~mines parameter constraints from engine source with LLM agents, requiring verbatim evidence (\\code{file:line}) for every constraint; (ii)~\\emph{falsifies} each candidate by constructing violating configurations and executing the engine's real validation path---without a GPU; and (iii)~injects the verified constraints into a Bayesian tuner as sampling domains, with a formal constraint algebra and an analytical cost relation. On vLLM v0.30.0, VeriCon extracts \\textbf{716} evidence-backed constraints and confirms \\textbf{113} by execution; a 300-site gold-standard audit measures recall at \\textbf{71.9\\%} (87.2\\% within $\\pm$1 line), corroborated at \\textbf{68.0\\%} (95\\% CI [54.2, 79.2]) by an independent non-scanner frame. The same protocol extracts \\textbf{420} constraints from SGLang v0.5.20. Across 8{,}000+ simulated trials, constraint injection cuts tuning cost by \\textbf{43.5--50.9\\%} across spaces, 48.3--49.6\\% across arrival rates, and 46.2--48.3\\% across request-length workloads (headline 48.6\\%, CI [46.7, 50.0]), driving invalid sampling from 31.5\\% to 0\\%. A 400-trial real-engine micro-study (llama.cpp, four arms including online learning) separates the constraint sources: 0\\% invalid trials for source-mined constraints vs 5\\% (online learning), 12\\% (folk rule), and 17\\% (none), at 13--34\\% lower cost, all on a four-core CPU laptop at zero cash cost."
+
+ABS_NEW = "Hand-written configuration knowledge does not last. The tuning systems that serve large language model (LLM) inference engines prune the search space with ``known constraints''---tiny hand-curated rule sets (three rules for SCOOT) that, as we show empirically, \\textbf{decay across engine releases: of SCOOT's three published rules, one was removed upstream and one keeps its semantics but was rendered dormant by changed defaults}, and six of six tested folk rules are unenforced on a second engine. We present \\textbf{VeriCon}, a pipeline that (i)~mines parameter constraints from engine source with LLM agents, requiring verbatim evidence (\\code{file:line}) for every constraint; (ii)~\\emph{falsifies} each candidate by constructing violating configurations and executing the engine's real validation path---without a GPU; and (iii)~injects the verified constraints into a Bayesian tuner as sampling domains. On vLLM v0.30.0, VeriCon extracts \\textbf{716} evidence-backed constraints and confirms \\textbf{113} via the construction path; a 300-site gold-standard audit measures recall at \\textbf{71.9\\%} (87.2\\% within $\\pm$1 line; 53.0\\%/63.2\\% under constraint-level design weighting). The same protocol extracts \\textbf{420} constraints from SGLang v0.5.20. Across 8{,}000+ simulated trials, constraint injection cuts tuning cost by \\textbf{43.5--50.9\\%} across spaces and remains 46--50\\% across arrival rates and workloads (headline 48.6\\%, CI [46.7, 50.0])---in that simulator subspace the manual and mined arms coincide by construction, so this isolates the value of constraint \\emph{knowledge}; the value of \\emph{automatic extraction} is established in RQ1--RQ4 and on the real engine. A 400-trial llama.cpp micro-study separates the sources: \\textbf{0\\%} invalid trials for source-mined constraints vs \\textbf{5\\%} (online learning), \\textbf{12\\%} (folk rule), and \\textbf{17\\%} (none), at \\textbf{13--34\\% lower cost}---all on a four-core CPU laptop at zero cash cost."
+
+pairs_main = [
+    (ABS_OLD, ABS_NEW),
+    # 贡献 #1 措辞
+    ("\\textbf{two of SCOOT's three published rules no longer hold in current releases}---one runtime guard was removed upstream; one conditional rule lost practical force as defaults changed---while one remains stable across five releases",
+     "\\textbf{two of SCOOT's three published rules have lost their force in current releases}---one runtime guard was removed upstream; one keeps its semantics but was rendered dormant by changed defaults---while one remains stable across five releases"),
+    # 贡献 #2：设计加权 + 独立框口径
+    ("two stratified gold-standard audits (300 sites) measure \\textbf{71.9\\% recall (87.2\\% within $\\pm$1 line)}, a non-scanner independent frame (150 files; 50 adjudicated engine sites) corroborates this at \\textbf{68.0\\% [54.2, 79.2]}; and an independent run with a different LLM re-discovers",
+     "two stratified gold-standard audits (300 sites) measure \\textbf{71.9\\% recall (87.2\\% within $\\pm$1 line; 53.0\\%/63.2\\% under constraint-level design weighting)}; an independent non-scanner frame gives a \\emph{lower}, scope-different estimate (68.0\\% at $\\pm$1 line, vs.\\ 87.2\\% on the candidate-pool frame); and an independent run with a different LLM re-discovers"),
+    # 贡献 #4：归因
+    ("constraint-aware sampling cuts cumulative cost by \\textbf{43.5--50.9\\% across spaces (2-D--6-D), 48.3--49.6\\% across arrival rates, and 46.2--48.3\\% across three request-length workloads} (headline: 48.6\\% with CI [46.7, 50.0]), halves trials-to-target",
+     "injecting constraint \\emph{knowledge} cuts cumulative cost by \\textbf{43.5--50.9\\% across spaces (2-D--6-D), 48.3--49.6\\% across arrival rates, and 46.2--48.3\\% across three request-length workloads} (headline: 48.6\\% with CI [46.7, 50.0])---the two constrained arms coincide by construction in this simulator subspace, so this measures the value of constraint knowledge, not of automatic extraction (that is RQ1--RQ4 and the real-engine study below)---halves trials-to-target"),
+    # §RQ1：三种估计量
+    ("the \\emph{design-weighted} estimates are \\textbf{50.8\\% (exact) and 59.5\\% ($\\pm$1)} (95\\% CI $\\approx$ [42.1, 59.5] and [50.9, 68.1])---we report both estimands and quote the equal-weight one in the abstract.",
+     "the site-level \\emph{design-weighted} estimates (weights = candidate count per tier, 244/119/2{,}766) are \\textbf{50.8\\% (exact) and 59.5\\% ($\\pm$1)} (95\\% CI $\\approx$ [42.1, 59.5] and [50.9, 68.1}); weighting instead by the estimated number of true constraints per tier (the estimand for ``recall over all true constraints'') gives \\textbf{53.0\\% (exact) and 63.2\\% ($\\pm$1)}---we report all three estimands and quote the equal-weight one in the abstract. The intervals treat the stratified samples as simple random; with tier~3 dominating the population they are approximate."),
+    # §RQ1：行级 vs 表达式级
+    ("By tier (exact/$\\pm$1): 66\\%/96\\% (config), 94\\%/96\\% (engine/core), 48\\%/55\\% (model/kernel); 5 of 97 non-constraint sites carry graph evidence.",
+     "By tier (exact/$\\pm$1): 66\\%/96\\% (config), 94\\%/96\\% (engine/core), 48\\%/55\\% (model/kernel); 5 of 97 non-constraint sites carry graph evidence. Recall is line-level (does the graph anchor the labeled site?); expression-level correctness is audited separately above."),
+    # §RQ1 C4 段：口径修正 + 单标注者
+    ("pre-filtered the 98 strongest candidates, which were then adjudicated one by one. Fifty are engine-configuration validation sites, of which the released graph captures \\textbf{34 by $\\pm$1 line (68.0\\%, Wilson 95\\% CI [54.2, 79.2]; 24 exact-line)}---consistent with the funnel-based estimate; the 16 residuals",
+     "pre-filtered the 98 strongest candidates, which were then adjudicated one by one by a single adjudicator (the pipeline operator). Fifty are engine-configuration validation sites, of which the released graph captures \\textbf{34 by $\\pm$1 line (68.0\\%, Wilson 95\\% CI [54.2, 79.2]; 24 exact-line)}---a lower estimate than the candidate-pool frame under the same $\\pm$1 criterion (87.2\\%, CI [81.9, 91.1]; the intervals do not overlap), which we read as a \\emph{scope} difference rather than a corroboration: the independent frame samples the whole source tree, the funnel frame the scanner's candidates; the 16 residuals"),
+    # §RQ5 S 臂 9.5%
+    ("S costs \\textbf{38.55 $\\pm$ 2.80 units} (invalid rate 10\\%)",
+     "S costs \\textbf{38.55 $\\pm$ 2.80 units} (invalid rate 9.5\\%)"),
+    # Table III 模型行
+    ("Model (anchor) & Qwen2.5-0.5B-Instruct (Q4\\_K\\_M) for llama.cpp \\\\",
+     "Model (anchor) & Qwen2.5-0.5B-Instruct (anchor grid) and Qwen2.5-1.5B-Instruct (micro-study), Q4\\_K\\_M, for llama.cpp \\\\"),
+    # 限制节 Anchor scale
+    ("\\textbf{Anchor scale.} The llama.cpp anchor uses a 0.5B model on CPU; absolute numbers do not represent GPU serving.",
+     "\\textbf{Anchor scale.} The llama.cpp evidence spans a 0.5B anchor grid and a 1.5B four-arm micro-study, both on a four-core CPU; absolute numbers do not represent GPU serving."),
+    # 限制节 Syntax coverage：口径
+    ("The independent non-scanner frame in \\S\\ref{sec:rq1} brackets this dependence (68.0\\%, CI [54.2, 79.2], on adjudicated engine-configuration sites) but also confirms the scope statement:",
+     "The independent non-scanner frame in \\S\\ref{sec:rq1} bounds this dependence from a broader scope (68.0\\% at $\\pm$1 line, vs.\\ 87.2\\% on the candidate-pool frame; single adjudicator) and confirms the scope statement:"),
+    # 审计段：来源披露
+    ("Cumulative: \\textbf{130 constraint-audits, 0 incorrect}.",
+     "Cumulative: \\textbf{130 constraint-audits, 0 incorrect}. All audits and labels in this paper were produced by pipeline roles or independent AI instances---no external human expert has yet reviewed them; a human sign-off checklist ships with the artifact release (\\S\\ref{sec:limitations})."),
+    # Proposition 1
+    ("\\textbf{Reliability of confirmation (Theorem~1).} If $c$ is confirmed on version $V$ by the protocol above, then every assignment reachable by the protocol's construction path that violates $\\varphi$ is rejected by $V$'s validation path; on that reachable sub-domain the engine's acceptance set coincides with $\\Lambda_C$. \\emph{Proof sketch:} a reachable violating assignment would have been constructed in step~2 and accepted in step~3, contradicting the confirmation. The guarantee is deliberately bounded: it covers only (i) protocol-reachable construction paths---cross-configuration and runtime constraints remain \\code{not-tested} (\\S\\ref{sec:rq2})---and (ii) the tested version, since hand-written knowledge drifts (\\S\\ref{sec:rq3}). This is why every graph node carries a version and a validation status.",
+     "\\textbf{Witness-level confirmation (Proposition~1).} If the protocol confirms $c$ on version $V$, then $V$'s validation path rejected the constructed violating witness. If the validator is \\emph{total} over $\\pi$ (it rejects \\emph{every} violating assignment, not a subset), confirmation extends to all protocol-reachable assignments sharing the tested code path. We state this as a proposition, not a universal guarantee: a validator may guard only some branches---our adversarial audit found three branch-precondition omissions among 30 nodes---and the evidence covers only (i) protocol-reachable construction paths, since cross-configuration and runtime constraints remain \\code{not-tested} (\\S\\ref{sec:rq2}), and (ii) the tested version, since constraint knowledge drifts (\\S\\ref{sec:rq3}). Every graph node therefore carries a version and a validation status."),
+    # Proposition 2
+    ("\\textbf{Zero-violation property (Theorem~2).} If the reachable domain is non-empty at every sampling step, the sampled assignment satisfies every constraint in $C$. \\emph{Proof:} induction over the sampling order---each sampled value lies inside all evaluable bounds, and constraints become evaluable as their parameters are assigned.",
+     "\\textbf{Zero-violation sampling (Proposition~2).} The sampler never returns a violating assignment: at each step it samples inside the intersection of all currently evaluable bounds, and reports failure (no sample) when that intersection is empty. It \\emph{succeeds} whenever every step's feasible domain is non-empty---an assumption, not a guarantee: the 716-node graph contains 7 cyclic implication clusters (largest cycle 3), for which no linear dependency order exists and bounds are instead computed from constraint evaluability as parameters are assigned. No empty-domain failure occurred in the 90 sampler-in-loop runs (\\S\\ref{sec:rq5})."),
+    # 附录措辞
+    ("Formalization and generic sampler:} constraint algebra, theorems, analytic relation",
+     "Formalization and generic sampler:} constraint algebra, propositions, analytic relation"),
+]
+
+pairs_cover = [
+    ("invalid-config sampling driven from 31.5% to 0%; a 400-trial real-engine micro-study (llama.cpp, four arms incl. SCOOT-style online learning) separates constraint sources:",
+     "invalid-config sampling driven from 31.5% to 0% (in this simulator subspace the two constrained arms coincide by construction, so the comparison isolates the value of constraint knowledge; automatic extraction's value is established by the extraction/drift results and the real-engine study); a 400-trial real-engine micro-study (llama.cpp, four arms incl. SCOOT-style online learning) separates constraint sources:"),
+    ("corroborated by an independent, non-scanner sampling frame at 68.0% with 95% CI [54.2, 79.2]",
+     "and a lower, scope-different 68.0% (at +/-1 line) on an independent non-scanner frame"),
+]
+
+for path, pairs in ((MAIN, pairs_main), (COVER, pairs_cover)):
+    t = open(path, encoding="utf-8").read()
+    for i, (o, n) in enumerate(pairs, 1):
+        c = t.count(o)
+        print(f"[{path.split('/')[-1]}] pair{i}: count={c}")
+        if c == 1:
+            t = t.replace(o, n)
+    open(path, "w", encoding="utf-8", newline="").write(t)
+print("DONE")

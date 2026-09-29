@@ -1,0 +1,1249 @@
+{
+  "cases": [
+    {
+      "constraint_id": "C143",
+      "type": "implication",
+      "expr": "capture_torch_profiler → profiler == 'torch'",
+      "params": [
+        "capture_torch_profiler",
+        "profiler"
+      ],
+      "violation_assignment": {
+        "capture_torch_profiler": true,
+        "profiler": null
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "capture_torch_profiler=True 要求 profiler=='torch'，而 profiler 保持默认 None，ProfilerConfig 校验在 profiler.py:247 抛 ValueError。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 247
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 248
+        }
+      ]
+    },
+    {
+      "constraint_id": "C144",
+      "type": "implication",
+      "expr": "profiler == 'proton' → proton_profiler_dir 非空",
+      "params": [
+        "profiler",
+        "proton_profiler_dir"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": ""
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "profiler=='proton' 时 proton_profiler_dir 必须非空，空串使 not proton_profiler_dir 成立（profiler.py:215）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 215
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 216
+        }
+      ]
+    },
+    {
+      "constraint_id": "C145",
+      "type": "implication",
+      "expr": "profiler == 'torch' → torch_profiler_dir 非空",
+      "params": [
+        "profiler",
+        "torch_profiler_dir"
+      ],
+      "violation_assignment": {
+        "profiler": "torch",
+        "torch_profiler_dir": ""
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "profiler=='torch' 时 torch_profiler_dir 必须非空，空串触发 profiler.py:185 的检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 185
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 186
+        }
+      ]
+    },
+    {
+      "constraint_id": "C146",
+      "type": "implication",
+      "expr": "proton_graph_attribution → proton_data == 'tree'",
+      "params": [
+        "proton_graph_attribution",
+        "proton_data"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": "/tmp/proton",
+        "proton_graph_attribution": true,
+        "proton_data": "trace"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "graph attribution 只在树形数据上做归因，proton_data=='trace' 使 profiler.py:228 的条件成立。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 228
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 229
+        }
+      ]
+    },
+    {
+      "constraint_id": "C147",
+      "type": "mutual_exclusion",
+      "expr": "proton_graph_attribution ⊥ proton_mode 以 'periodic_flushing' 开头",
+      "params": [
+        "proton_graph_attribution",
+        "proton_mode"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": "/tmp/proton",
+        "proton_graph_attribution": true,
+        "proton_data": "tree",
+        "proton_mode": "periodic_flushing"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "proton_mode 以 'periodic_flushing' 开头与 proton_graph_attribution 冲突；proton_data 给 'tree' 以绕过前一条检查（profiler.py:230-235）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 231
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 232
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 233
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 235
+        }
+      ]
+    },
+    {
+      "constraint_id": "C148",
+      "type": "implication",
+      "expr": "proton_output_format == 'chrome_trace' → proton_data == 'trace'",
+      "params": [
+        "proton_output_format",
+        "proton_data"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": "/tmp/proton",
+        "proton_output_format": "chrome_trace",
+        "proton_data": "tree"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "chrome_trace 输出需要 trace 模式采集的数据，proton_data 为 'tree' 时 profiler.py:239 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 239
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 240
+        }
+      ]
+    },
+    {
+      "constraint_id": "C149",
+      "type": "implication",
+      "expr": "proton_output_format ∈ {'hatchet', 'hatchet_msgpack'} → proton_data == 'tree'",
+      "params": [
+        "proton_output_format",
+        "proton_data"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": "/tmp/proton",
+        "proton_output_format": "hatchet",
+        "proton_data": "trace"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "hatchet 系列输出需要 tree 模式数据，proton_data=='trace' 使 profiler.py:241-245 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 242
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 243
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 245
+        }
+      ]
+    },
+    {
+      "constraint_id": "C150",
+      "type": "range",
+      "expr": "proton_profiler_dir 必须是本地目录路径（不含 gs://、s3:// 等 URI scheme）",
+      "params": [
+        "proton_profiler_dir"
+      ],
+      "violation_assignment": {
+        "profiler": "proton",
+        "proton_profiler_dir": "gs://bucket/profiles"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "proton_profiler_dir 只接受本地目录，gs:// URI 被 _is_uri_path 判定为 URI scheme（profiler.py:220-221）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 220
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 221
+        }
+      ]
+    },
+    {
+      "constraint_id": "C151",
+      "type": "implication",
+      "expr": "torch_profiler_dir 非空 → profiler == 'torch'",
+      "params": [
+        "torch_profiler_dir",
+        "profiler"
+      ],
+      "violation_assignment": {
+        "torch_profiler_dir": "/tmp/torch",
+        "profiler": null
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "torch_profiler_dir 只对 profiler=='torch' 生效，profiler 为默认 None 时 profiler.py:181 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 181
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 182
+        }
+      ]
+    },
+    {
+      "constraint_id": "C152",
+      "type": "implication",
+      "expr": "任一 proton_* 选项偏离默认值 → profiler == 'proton'",
+      "params": [
+        "profiler",
+        "proton_profiler_dir",
+        "proton_context",
+        "proton_data",
+        "proton_backend",
+        "proton_mode",
+        "proton_hook",
+        "proton_output_format",
+        "proton_graph_attribution"
+      ],
+      "violation_assignment": {
+        "profiler": null,
+        "proton_data": "trace"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "任一 proton_* 选项偏离默认值都要求 profiler=='proton'，proton_data 从默认 'tree' 改为 'trace' 触发 profiler.py:210。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 196
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 210
+        },
+        {
+          "file": "vllm/config/profiler.py",
+          "line": 212
+        }
+      ]
+    },
+    {
+      "constraint_id": "C154",
+      "type": "enum",
+      "expr": "for shorthand in targets.values(): shorthand ∈ _ONLINE_SHORTHANDS 名称集合",
+      "params": [
+        "targets"
+      ],
+      "violation_assignment": {
+        "targets": {
+          "model.layers.0.self_attn.q_proj": "___invalid___"
+        }
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "targets 的值必须是 _ONLINE_SHORTHANDS 中的简写名，非法名在字段校验阶段被拒（quantization.py:156-161）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 156
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 157
+        }
+      ]
+    },
+    {
+      "constraint_id": "C155",
+      "type": "mutual_exclusion",
+      "expr": "targets is None or (linear is None and moe is None)",
+      "params": [
+        "targets",
+        "linear",
+        "moe"
+      ],
+      "violation_assignment": {
+        "targets": {
+          "model.layers.0.self_attn.q_proj": "fp8_per_tensor"
+        },
+        "linear": "fp8_per_tensor"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "targets 与 linear/moe 互斥，同时给出时 QuantizationConfigArgs 的 model_validator 在 quantization.py:175 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 175
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "constraint_id": "C156",
+      "type": "type",
+      "expr": "targets is None or isinstance(targets, dict)",
+      "params": [
+        "targets"
+      ],
+      "violation_assignment": {
+        "targets": "fp8_per_tensor"
+      },
+      "expected_error_kind": "TypeError",
+      "rationale": "targets 必须是 dict，字符串在 _validate_targets 中直接 raise TypeError（quantization.py:149-150）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 149
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 150
+        }
+      ]
+    },
+    {
+      "constraint_id": "C157",
+      "type": "type",
+      "expr": "weight | activation ∈ {None, str（QUANT_KEY_NAMES 键）, QuantKey}",
+      "params": [
+        "weight",
+        "activation"
+      ],
+      "violation_assignment": {
+        "weight": 123
+      },
+      "expected_error_kind": "TypeError",
+      "rationale": "QuantSpec.weight 只接受 None/QUANT_KEY_NAMES 名字/QuantKey，整数 123 走 _coerce_quant_key 的类型错误分支（quantization.py:49-50）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 47
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 49
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 50
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 80
+        },
+        {
+          "file": "vllm/config/quantization.py",
+          "line": 83
+        }
+      ]
+    },
+    {
+      "constraint_id": "C158",
+      "type": "inequality",
+      "expr": "long_prefill_token_threshold <= max_model_len",
+      "params": [
+        "long_prefill_token_threshold",
+        "max_model_len"
+      ],
+      "violation_assignment": {
+        "long_prefill_token_threshold": 2048,
+        "max_model_len": 256
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "长 prefill 阈值大于 max_model_len，SchedulerConfig.__post_init__ -> verify_max_model_len 在 scheduler.py:324 抛错；默认 max_num_batched_tokens=2048 >= 256 使前两条检查通过。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 324
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 325
+        }
+      ]
+    },
+    {
+      "constraint_id": "C159",
+      "type": "inequality",
+      "expr": "max_num_batched_tokens <= max_num_seqs * max_model_len（超出仅告警）",
+      "params": [
+        "max_num_batched_tokens",
+        "max_num_seqs",
+        "max_model_len"
+      ],
+      "violation_assignment": {
+        "max_num_batched_tokens": 4096,
+        "max_num_seqs": 2,
+        "max_model_len": 128
+      },
+      "expected_error_kind": "any",
+      "rationale": "max_num_batched_tokens 大于 max_num_seqs*max_model_len=256 只触发 logger.warning，不抛异常（scheduler.py:316-322），构造成功即为违例成立。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 316
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 317
+        }
+      ]
+    },
+    {
+      "constraint_id": "C160",
+      "type": "implication",
+      "expr": "not enable_chunked_prefill → max_num_batched_tokens >= max_model_len",
+      "params": [
+        "max_num_batched_tokens",
+        "max_model_len",
+        "enable_chunked_prefill"
+      ],
+      "violation_assignment": {
+        "enable_chunked_prefill": false,
+        "max_model_len": 4096
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "未开 chunked prefill 时默认 max_num_batched_tokens=2048 < max_model_len=4096，scheduler.py:296-300 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 296
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 297
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 298
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 300
+        }
+      ]
+    },
+    {
+      "constraint_id": "C162",
+      "type": "mutual_exclusion",
+      "expr": "enable_return_routed_experts => decode_context_parallel_size == 1 and prefill_context_parallel_size == 1",
+      "params": [
+        "enable_return_routed_experts",
+        "decode_context_parallel_size",
+        "prefill_context_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_return_routed_experts": true,
+        "decode_context_parallel_size": 2,
+        "tensor_parallel_size": 2,
+        "distributed_executor_backend": "mp"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "VllmConfig.__post_init__ 在 vllm.py:1288-1295 拒绝 enable_return_routed_experts 与 DCP>1/PCP>1 同用；tp=2 满足 tp%dcp==0，显式 mp 后端避免单机 GPU 数量检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 392
+        },
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 393
+        },
+        {
+          "file": "vllm/v1/core/sched/scheduler.py",
+          "line": 394
+        }
+      ]
+    },
+    {
+      "constraint_id": "C164",
+      "type": "enum",
+      "expr": "scheduling_policy in {\"fcfs\", \"priority\"}",
+      "params": [
+        "scheduling_policy"
+      ],
+      "violation_assignment": {
+        "policy": "___invalid___"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "policy 是 Literal['fcfs','priority']，非法取值在 SchedulerConfig 构造时被 pydantic 拒绝（ValidationError 为 ValueError 子类）；运行期 create_request_queue 另有同样检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 203
+        },
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 205
+        },
+        {
+          "file": "vllm/v1/core/sched/request_queue.py",
+          "line": 208
+        },
+        {
+          "file": "vllm/config/scheduler.py",
+          "line": 141
+        }
+      ]
+    },
+    {
+      "constraint_id": "C168",
+      "type": "range",
+      "expr": "1.0 <= synthetic_acceptance_length <= num_speculative_tokens + 1",
+      "params": [
+        "synthetic_acceptance_length",
+        "num_speculative_tokens"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 4,
+        "rejection_sample_method": "synthetic",
+        "synthetic_acceptance_length": 10.0
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "目标平均接受长度必须落在 [1, n+1]=[1,5]，10.0 越界（speculative.py:582-585）；ngram 方法无需 draft 模型即可构造。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 582
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 583
+        }
+      ]
+    },
+    {
+      "constraint_id": "C169",
+      "type": "range",
+      "expr": "all(0.0 <= r <= 1.0 for r in synthetic_acceptance_rates)",
+      "params": [
+        "synthetic_acceptance_rates"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 2,
+        "rejection_sample_method": "synthetic",
+        "synthetic_acceptance_rates": [
+          1.5,
+          0.5
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "每个接受率必须在 [0,1]，1.5 越界；长度 2 与 num_speculative_tokens 一致以隔离该检查（speculative.py:571-575）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 571
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 572
+        }
+      ]
+    },
+    {
+      "constraint_id": "C176",
+      "type": "implication",
+      "expr": "index_share_for_mtp_iteration is not None ⇒ method == 'mtp' 且 draft_model_config is not None",
+      "params": [
+        "index_share_for_mtp_iteration",
+        "method",
+        "draft_model_config"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 5,
+        "index_share_for_mtp_iteration": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "index_share_for_mtp_iteration 仅 method=='mtp' 有意义，ngram 下 speculative.py:1555-1559 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1556
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1557
+        }
+      ]
+    },
+    {
+      "constraint_id": "C177",
+      "type": "arithmetic",
+      "expr": "len(synthetic_acceptance_rates) == num_speculative_tokens",
+      "params": [
+        "synthetic_acceptance_rates",
+        "num_speculative_tokens"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 3,
+        "rejection_sample_method": "synthetic",
+        "synthetic_acceptance_rates": [
+          0.9,
+          0.8
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "per-position rates 长度必须等于 num_speculative_tokens=3，这里只有 2 个（speculative.py:567-570）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 567
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 568
+        }
+      ]
+    },
+    {
+      "constraint_id": "C178",
+      "type": "mutual_exclusion",
+      "expr": "method != 'dspark' ⇒ not (enable_adaptive_verification and use_local_argmax_reduction)",
+      "params": [
+        "method",
+        "enable_adaptive_verification",
+        "use_local_argmax_reduction"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 4,
+        "enable_adaptive_verification": true,
+        "use_local_argmax_reduction": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "非 dspark 方法下 enable_adaptive_verification 与 use_local_argmax_reduction 互斥（use_local_argmax_reduction 不物化完整 logits），speculative.py:1564-1573 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1565
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1567
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1569
+        }
+      ]
+    },
+    {
+      "constraint_id": "C179",
+      "type": "implication",
+      "expr": "method == 'custom_class' ⇒ model 非空（需提供自定义 proposer 模块路径）",
+      "params": [
+        "method",
+        "model"
+      ],
+      "violation_assignment": {
+        "method": "custom_class",
+        "num_speculative_tokens": 4
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "custom_class 要求 model 提供自定义 proposer 导入路径，model 为空时 speculative.py:1162-1166 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1162
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1163
+        }
+      ]
+    },
+    {
+      "constraint_id": "C181",
+      "type": "implication",
+      "expr": "method == 'dspark' ⇒ target_model_config is not None",
+      "params": [
+        "method",
+        "target_model_config"
+      ],
+      "violation_assignment": {
+        "method": "dspark",
+        "num_speculative_tokens": 4
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "dspark 需要 target_model_config 定位随目标 checkpoint 发布的 draft 权重，未提供时 speculative.py:1146-1147 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1147
+        }
+      ]
+    },
+    {
+      "constraint_id": "C183",
+      "type": "implication",
+      "expr": "method == 'mtp' ⇒ target_model_config is not None",
+      "params": [
+        "method",
+        "target_model_config"
+      ],
+      "violation_assignment": {
+        "method": "mtp",
+        "num_speculative_tokens": 4
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "mtp 需要 target_model_config 派生 draft，未提供时 speculative.py:1129-1130 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1129
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1130
+        }
+      ]
+    },
+    {
+      "constraint_id": "C184",
+      "type": "implication",
+      "expr": "model is None 且 num_speculative_tokens 非空 ⇒ method ∈ {'mtp', 'dspark', 'ngram', 'ngram_gpu', 'suffix', 'extract_hidden_states'}",
+      "params": [
+        "model",
+        "num_speculative_tokens",
+        "method"
+      ],
+      "violation_assignment": {
+        "method": "eagle",
+        "num_speculative_tokens": 4
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "model 为 None 且给了 num_speculative_tokens 时 method 只能是 mtp/dspark/ngram/ngram_gpu/suffix/extract_hidden_states，eagle 落到 speculative.py:1167-1170 的 else 分支报错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1168
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1169
+        }
+      ]
+    },
+    {
+      "constraint_id": "C187",
+      "type": "range",
+      "expr": "num_speculative_tokens > 0",
+      "params": [
+        "num_speculative_tokens"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 0
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "num_speculative_tokens 字段本身 Field(gt=0)，0 在构造时被 pydantic 约束拒绝（speculative.py:381；1791 行另有重复校验）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1791
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1792
+        }
+      ]
+    },
+    {
+      "constraint_id": "C189",
+      "type": "implication",
+      "expr": "num_speculative_tokens is not None 或可由 draft n_predict / suffix 默认补齐（否则报错）",
+      "params": [
+        "num_speculative_tokens",
+        "model",
+        "draft_model_config"
+      ],
+      "violation_assignment": {
+        "method": "ngram"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "既未给 num_speculative_tokens，也没有 draft n_predict 或 suffix 默认可补齐，_verify_args 在 speculative.py:1784-1789 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1784
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1785
+        }
+      ]
+    },
+    {
+      "constraint_id": "C190",
+      "type": "inequality",
+      "expr": "prompt_lookup_min <= prompt_lookup_max",
+      "params": [
+        "prompt_lookup_min",
+        "prompt_lookup_max"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 5,
+        "prompt_lookup_min": 10,
+        "prompt_lookup_max": 5
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "ngram 窗口下界 prompt_lookup_min=10 大于上界 prompt_lookup_max=5，speculative.py:1197-1201 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1197
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1198
+        }
+      ]
+    },
+    {
+      "constraint_id": "C191",
+      "type": "mutual_exclusion",
+      "expr": "rejection_sample_method != 'synthetic' ⇒ synthetic_acceptance_rates is None and synthetic_acceptance_length is None",
+      "params": [
+        "rejection_sample_method",
+        "synthetic_acceptance_rates",
+        "synthetic_acceptance_length"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 3,
+        "synthetic_acceptance_rates": [
+          0.9,
+          0.8,
+          0.7
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "synthetic_acceptance_rates 只在 rejection_sample_method=='synthetic' 时合法，这里保持默认 'standard'，speculative.py:1805-1812 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1805
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1807
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1809
+        }
+      ]
+    },
+    {
+      "constraint_id": "C192",
+      "type": "implication",
+      "expr": "rejection_sample_method == 'synthetic' ⇒ synthetic_acceptance_rates 与 synthetic_acceptance_length 恰有其一非空",
+      "params": [
+        "rejection_sample_method",
+        "synthetic_acceptance_rates",
+        "synthetic_acceptance_length"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 3,
+        "rejection_sample_method": "synthetic"
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "synthetic 必须且只能给出 synthetic_acceptance_rates 与 synthetic_acceptance_length 之一，二者皆空触发 speculative.py:561-565。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 561
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 562
+        }
+      ]
+    },
+    {
+      "constraint_id": "C193",
+      "type": "mutual_exclusion",
+      "expr": "speculative_config.tensor_parallel_size is None（draft TP 应通过 draft_tensor_parallel_size 指定）",
+      "params": [
+        "tensor_parallel_size",
+        "draft_tensor_parallel_size",
+        "speculative_config"
+      ],
+      "violation_assignment": {
+        "tensor_parallel_size": 2
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "SpeculativeConfig.tensor_parallel_size 是误用提示字段，设置即报错，正确参数是 draft_tensor_parallel_size（speculative.py:1778-1782）。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1778
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1779
+        }
+      ]
+    },
+    {
+      "constraint_id": "C197",
+      "type": "range",
+      "expr": "synthetic_acceptance_rates 单调不增（rates[i] <= rates[i-1]）",
+      "params": [
+        "synthetic_acceptance_rates"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 3,
+        "rejection_sample_method": "synthetic",
+        "synthetic_acceptance_rates": [
+          0.5,
+          0.8,
+          0.2
+        ]
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "接受率必须单调不增，rates[1]=0.8 > rates[0]=0.5 触发 speculative.py:576-579；长度与取值范围均合法以隔离该检查。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 576
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 577
+        }
+      ]
+    },
+    {
+      "constraint_id": "C200",
+      "type": "implication",
+      "expr": "use_heterogeneous_vocab == True ⇒ method == 'draft_model'",
+      "params": [
+        "use_heterogeneous_vocab",
+        "method"
+      ],
+      "violation_assignment": {
+        "method": "ngram",
+        "num_speculative_tokens": 4,
+        "use_heterogeneous_vocab": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "异构词表只在 method=='draft_model' 下实现，ngram 使 uses_draft_model() 为假，speculative.py:1819-1822 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1819
+        },
+        {
+          "file": "vllm/config/speculative.py",
+          "line": 1820
+        }
+      ]
+    },
+    {
+      "constraint_id": "C201",
+      "type": "implication",
+      "expr": "disable_additional_properties → backend == 'guidance'",
+      "params": [
+        "disable_additional_properties",
+        "backend"
+      ],
+      "violation_assignment": {
+        "backend": "xgrammar",
+        "disable_additional_properties": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "disable_additional_properties 只有 guidance 后端支持，xgrammar 下 structured_outputs.py:69-73 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 69
+        },
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 70
+        }
+      ]
+    },
+    {
+      "constraint_id": "C202",
+      "type": "implication",
+      "expr": "disable_any_whitespace → backend ∈ {'xgrammar', 'guidance'}",
+      "params": [
+        "disable_any_whitespace",
+        "backend"
+      ],
+      "violation_assignment": {
+        "backend": "outlines",
+        "disable_any_whitespace": true
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "disable_any_whitespace 只支持 xgrammar/guidance 后端，outlines 下 structured_outputs.py:64-68 抛错。",
+      "evidence_hint": [
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 64
+        },
+        {
+          "file": "vllm/config/structured_outputs.py",
+          "line": 65
+        }
+      ]
+    },
+    {
+      "constraint_id": "C210",
+      "type": "inequality",
+      "expr": "enable_elastic_ep implies elastic_ep_max_dp_size >= data_parallel_size",
+      "params": [
+        "enable_elastic_ep",
+        "elastic_ep_max_dp_size",
+        "data_parallel_size"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": true,
+        "enable_expert_parallel": true,
+        "data_parallel_size": 2,
+        "elastic_ep_max_dp_size": 1
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "ParallelConfig.__post_init__ 在 parallel.py:954-958 要求 elastic_ep_max_dp_size >= 初始 data_parallel_size；前置条件 enable_eplb 要求 CUDA 平台，且 TP*PCP*DP>1 由 data_parallel_size=2 满足。",
+      "evidence_hint": [
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1715
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1714
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 954
+        }
+      ]
+    },
+    {
+      "constraint_id": "C211",
+      "type": "implication",
+      "expr": "enable_elastic_ep implies not (data_parallel_hybrid_lb or data_parallel_external_lb)",
+      "params": [
+        "enable_elastic_ep",
+        "data_parallel_hybrid_lb",
+        "data_parallel_external_lb"
+      ],
+      "violation_assignment": {
+        "enable_elastic_ep": true,
+        "enable_eplb": true,
+        "enable_expert_parallel": true,
+        "data_parallel_size": 2,
+        "data_parallel_hybrid_lb": true
+      },
+      "expected_error_kind": "NotImplementedError",
+      "rationale": "Elastic EP 依赖单一 API server/core client，与 hybrid/external LB 冲突，ParallelConfig.__post_init__ 在 parallel.py:894-899 抛 NotImplementedError；data_parallel_size=2 用于满足 EPLB 的并行度要求。",
+      "evidence_hint": [
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1421
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1422
+        },
+        {
+          "file": "vllm/v1/engine/core_client.py",
+          "line": 1423
+        },
+        {
+          "file": "vllm/config/parallel.py",
+          "line": 894
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "constraint_id": "C153",
+      "reason": "无法用合法 JSON 表达：JSON 对象键恒为字符串，targets 的非字符串键违例无法由配置赋值构造（需直接构造 Python dict）。"
+    },
+    {
+      "constraint_id": "C161",
+      "reason": "非构造期校验：compute_mm_encoder_budget 在引擎启动、多模态 encoder 预算初始化阶段执行（multimodal/encoder_budget.py:124），且需真实多模态模型。"
+    },
+    {
+      "constraint_id": "C163",
+      "reason": "非构造期校验：kv_transfer_config 与 encoder-decoder 的断言在 v1 Scheduler.__init__（引擎启动）才触发（v1/core/sched/scheduler.py:152）。"
+    },
+    {
+      "constraint_id": "C165",
+      "reason": "suffix 校验依赖可选包 arctic_inference：method=='suffix' 时 _validate_suffix_decoding 先做 has_arctic_inference() 检查，未安装只能得到 ImportError，目标 range 校验不可达。"
+    },
+    {
+      "constraint_id": "C166",
+      "reason": "校验依赖 Qwen3-Omni DSpark draft checkpoint 契约（draft hf_config.draft_vocab_size / target_vocab_size），无法仅用顶层配置字段赋值构造。"
+    },
+    {
+      "constraint_id": "C167",
+      "reason": "校验需要 method=='dspark' 且已加载 draft 模型配置（hf_config.vocab_size/draft_vocab_size），无真实 draft checkpoint 无法构造。"
+    },
+    {
+      "constraint_id": "C170",
+      "reason": "校验读取 draft hf_config 的 block_size/dspark_block_size，需真实 Qwen3-Omni DSpark draft 配置。"
+    },
+    {
+      "constraint_id": "C171",
+      "reason": "校验读取 draft hf_config.vocab_size，需真实 Qwen3-Omni DSpark draft checkpoint 配置。"
+    },
+    {
+      "constraint_id": "C172",
+      "reason": "校验比较 draft 与 target thinker 的 hidden_size/target_hidden_size，需真实 Qwen3-Omni 目标与 draft 配置。"
+    },
+    {
+      "constraint_id": "C173",
+      "reason": "校验在加载 draft ModelConfig 之后执行（_verify_and_get_draft_tp），需要可用的 draft 模型 checkpoint 路径。"
+    },
+    {
+      "constraint_id": "C174",
+      "reason": "校验位于 draft 模型分支（model 非空才会执行），需真实 draft 模型路径（speculative.py:1494，位于 if self.model is not None 内）。"
+    },
+    {
+      "constraint_id": "C175",
+      "reason": "校验要求 method=='dspark' 且已加载 draft 模型 architectures（Qwen3DSparkModel/Qwen3OmniDSparkModel），无法用顶层字段构造。"
+    },
+    {
+      "constraint_id": "C180",
+      "reason": "校验比较 target/draft 的 get_vocab_size()，需真实加载的模型配置。"
+    },
+    {
+      "constraint_id": "C182",
+      "reason": "校验依赖 target 为 Qwen3-Omni 且 draft architectures 含 Qwen3OmniDSparkModel，需真实模型 checkpoint 配置。"
+    },
+    {
+      "constraint_id": "C185",
+      "reason": "校验依赖 draft hf_config.n_predict 或用户提供值，需真实 draft checkpoint 配置。"
+    },
+    {
+      "constraint_id": "C186",
+      "reason": "Qwen3-Omni DSpark 的 num_speculative_tokens 与 block_size 一致性校验，需真实 checkpoint 配置。"
+    },
+    {
+      "constraint_id": "C188",
+      "reason": "校验依赖 draft hf_config.n_predict 的整除关系，需真实 draft checkpoint 配置。"
+    },
+    {
+      "constraint_id": "C194",
+      "reason": "suffix 校验依赖可选包 arctic_inference（同 C165）：未安装时先抛 ImportError，目标 range 校验不可达。"
+    },
+    {
+      "constraint_id": "C195",
+      "reason": "suffix 校验依赖可选包 arctic_inference（同 C165）：未安装时先抛 ImportError，目标 range 校验不可达。"
+    },
+    {
+      "constraint_id": "C196",
+      "reason": "suffix 校验依赖可选包 arctic_inference（同 C165）：未安装时先抛 ImportError，目标 range 校验不可达。"
+    },
+    {
+      "constraint_id": "C198",
+      "reason": "校验需要 draft 模型被判为 MTP 且 target hf_config.model_type=='deepseek_v41'，需真实 deepseek_v41 模型配置。"
+    },
+    {
+      "constraint_id": "C199",
+      "reason": "违例需 method=='draft_model'（uses_draft_model() 为真）与异构词表开关同用，必须先加载真实 draft 模型；ngram 等方法会先触发 C200 的检查。"
+    },
+    {
+      "constraint_id": "C203",
+      "reason": "非构造期校验：data_parallel_rank 范围检查在 input_processor 处理请求时执行（请求期，v1/engine/input_processor.py:302）。"
+    },
+    {
+      "constraint_id": "C204",
+      "reason": "非构造期校验：Ray DP span 策略断言在 v1/engine/utils.py:656 构建 placement group 时执行，且依赖环境变量 VLLM_RAY_DP_PACK_STRATEGY 与 Ray 集群。"
+    },
+    {
+      "constraint_id": "C205",
+      "reason": "非构造期校验：Ray DP span 策略断言在 v1/engine/utils.py:652 构建 placement group 时执行，且依赖环境变量 VLLM_RAY_DP_PACK_STRATEGY 与 Ray 集群。"
+    },
+    {
+      "constraint_id": "C206",
+      "reason": "非构造期校验：Ray DP span 策略断言在 v1/engine/utils.py:640 构建 placement group 时执行，单节点设备数为集群信息而非参数。"
+    },
+    {
+      "constraint_id": "C207",
+      "reason": "非构造期校验：all2all_backend 与 VLLM_RAY_DP_PACK_STRATEGY 的耦合检查在 Ray DP placement group 构建时执行（v1/engine/utils.py:629），环境变量不在参数清单内。"
+    },
+    {
+      "constraint_id": "C208",
+      "reason": "非构造期校验：kv_sharing_fast_prefill 与请求 prompt_logprobs 的检查在 AsyncLLM 请求处理路径（请求期，v1/engine/async_llm.py:388-392）。"
+    },
+    {
+      "constraint_id": "C209",
+      "reason": "非构造期校验：仅 ray DP 后端支持 elastic EP 的断言在 core_client 的运行时扩缩容路径（v1/engine/core_client.py:1710）。"
+    },
+    {
+      "constraint_id": "C212",
+      "reason": "非构造期校验：DP worker 配置哈希一致性在引擎握手阶段（运行时）检查（v1/engine/utils.py:1391-1402）。"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+cd "/mnt/f/文献/AgentOps/论文/latex"
+echo "== 未定义引用/文献 =="
+grep -aE "LaTeX Warning: (Reference|Citation|There were undefined)" main.log | head -10 || echo "  （无）"
+echo ""
+echo "== 缺失图片 =="
+grep -aE "File .* not found|LaTeX Error" main.log | head -10 || echo "  （无）"
+echo ""
+echo "== Overfull 检查（正文溢出，>5pt） =="
+grep -a "Overfull" main.log | head -10 || echo "  （无 Overfull）"
+echo ""
+echo "== 页数与体积 =="
+pdfinfo main.pdf 2>/dev/null | head -8 || ls -la main.pdf
+echo ""
+echo "== 关键内容抽查（PDT 文本层） =="
+pdftotext main.pdf - 2>/dev/null | grep -cE "VeriCon|716|113|71.9" || echo "(pdftotext 不可用)"

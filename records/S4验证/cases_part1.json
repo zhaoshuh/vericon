@@ -1,0 +1,473 @@
+{
+  "cases": [
+    {
+      "constraint_id": "C001",
+      "type": "enum",
+      "expr": "backend_per_kind.keys() ⊆ KVCacheSpecKind 取值 {full_attention, mla_attention, sliding_window, sliding_window_mla, mamba, chunked_local_attention, sink_full_attention, encoder_only_attention, cross_attention, unknown}",
+      "params": ["backend_per_kind"],
+      "violation_assignment": {"attention_config": {"backend_per_kind": {"___invalid___": "FLASH_ATTN"}}},
+      "expected_error_kind": "ValueError",
+      "rationale": "backend_per_kind 的键必须是 KVCacheSpecKind 成员值，'___invalid___' 不在白名单内，AttentionConfig 的 field_validator 在构造（EngineArgs.__post_init__ 转换 dict）时直接抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/attention.py", "line": 193}, {"file": "vllm/config/attention.py", "line": 194}]
+    },
+    {
+      "constraint_id": "C002",
+      "type": "range",
+      "expr": "all(b > 0 for b in encoder_cudagraph_token_budgets)",
+      "params": ["encoder_cudagraph_token_budgets"],
+      "violation_assignment": {"compilation_config": {"encoder_cudagraph_token_budgets": [0]}},
+      "expected_error_kind": "ValueError",
+      "rationale": "列表元素 0 不满足 b > 0，CompilationConfig.__post_init__ 的 'must be positive' 分支在构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1065}, {"file": "vllm/config/compilation.py", "line": 1068}]
+    },
+    {
+      "constraint_id": "C003",
+      "type": "enum",
+      "expr": "compile_cache_save_format in {'binary','unpacked'}",
+      "params": ["compile_cache_save_format"],
+      "violation_assignment": {"compilation_config": {"compile_cache_save_format": "___invalid___"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "'___invalid___' 不在 {'binary','unpacked'} 中，CompilationConfig 的字段校验（Literal/validate_compile_cache_save_format）在构造时抛 ValueError（pydantic ValidationError 亦为 ValueError 子类）。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 895}, {"file": "vllm/config/compilation.py", "line": 896}]
+    },
+    {
+      "constraint_id": "C005",
+      "type": "implication",
+      "expr": "cudagraph_mm_encoder == True implies (encoder_cudagraph_max_frames_per_batch is None or encoder_cudagraph_max_frames_per_batch >= 0)",
+      "params": ["cudagraph_mm_encoder", "encoder_cudagraph_max_frames_per_batch"],
+      "violation_assignment": {"compilation_config": {"cudagraph_mm_encoder": true, "encoder_cudagraph_max_frames_per_batch": -1}},
+      "expected_error_kind": "ValueError",
+      "rationale": "A 为真（cudagraph_mm_encoder=True）而 B 为假（-1 < 0 且非 None），CompilationConfig.__post_init__ 在构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1055}, {"file": "vllm/config/compilation.py", "line": 1060}]
+    },
+    {
+      "constraint_id": "C006",
+      "type": "implication",
+      "expr": "cudagraph_mm_encoder == True implies encoder_cudagraph_max_vision_items_per_batch >= 0",
+      "params": ["cudagraph_mm_encoder", "encoder_cudagraph_max_vision_items_per_batch"],
+      "violation_assignment": {"compilation_config": {"cudagraph_mm_encoder": true, "encoder_cudagraph_max_vision_items_per_batch": -1}},
+      "expected_error_kind": "ValueError",
+      "rationale": "启用 mm encoder CUDA graph 时 vision item 上限为负，CompilationConfig.__post_init__ 在构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1047}, {"file": "vllm/config/compilation.py", "line": 1051}]
+    },
+    {
+      "constraint_id": "C008",
+      "type": "mutual_exclusion",
+      "expr": "custom_ops 中不允许同一算子同时以 '+op' 与 '-op' 出现（启用与禁用互斥）",
+      "params": ["custom_ops"],
+      "violation_assignment": {"compilation_config": {"custom_ops": ["+silu_and_mul", "-silu_and_mul"]}},
+      "expected_error_kind": "ValueError",
+      "rationale": "同一算子 silu_and_mul 同时出现在 enabled_ops 与 disabled_ops 的交集中，CompilationConfig.__post_init__ 的 conflicting_ops 检查在构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1027}, {"file": "vllm/config/compilation.py", "line": 1029}]
+    },
+    {
+      "constraint_id": "C009",
+      "type": "range",
+      "expr": "custom_ops.count('all') + custom_ops.count('none') <= 1",
+      "params": ["custom_ops"],
+      "violation_assignment": {"compilation_config": {"custom_ops": ["all", "none"]}},
+      "expected_error_kind": "ValueError",
+      "rationale": "同时给出两个基模式 'all' 与 'none'，base_modes 长度为 2 > 1，CompilationConfig.__post_init__ 在构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1020}, {"file": "vllm/config/compilation.py", "line": 1021}]
+    },
+    {
+      "constraint_id": "C013",
+      "type": "implication",
+      "expr": "mode == VLLM_COMPILE implies backend in ('', 'eager', 'inductor')",
+      "params": ["mode", "backend"],
+      "violation_assignment": {"compilation_config": {"mode": "VLLM_COMPILE", "backend": "dummy_backend"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "VLLM_COMPILE 模式下自定义 backend 不被 piecewise 编译支持，CompilationConfig.__post_init__ 在构造时抛 'Invalid backend for piecewise compilation'。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 1037}, {"file": "vllm/config/compilation.py", "line": 1042}]
+    },
+    {
+      "constraint_id": "C014",
+      "type": "enum",
+      "expr": "mode in {'NONE','STOCK_TORCH_COMPILE','DYNAMO_TRACE_ONCE','VLLM_COMPILE'}（字符串解析时必须命中枚举成员名；也可直接给 0-3 整数）",
+      "params": ["mode"],
+      "violation_assignment": {"compilation_config": {"mode": "___invalid___"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "'___invalid___' upper() 后不在 CompilationMode.__members__ 中，validate_mode_before 在 CompilationConfig 构造时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/compilation.py", "line": 868}, {"file": "vllm/config/compilation.py", "line": 869}]
+    },
+    {
+      "constraint_id": "C019",
+      "type": "implication",
+      "expr": "manager_config != {} → encoder_cache_manager_cls is not None",
+      "params": ["manager_config", "encoder_cache_manager_cls"],
+      "violation_assignment": {"ec_manager_config": {"manager_config": {"dummy_key": "dummy_value"}}},
+      "expected_error_kind": "ValueError",
+      "rationale": "manager_config 非空但 encoder_cache_manager_cls 为 None（未提供），EncoderCacheManagerConfig.__post_init__ 在 EngineArgs.__post_init__ 转换 dict 时抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/ec_manager_config.py", "line": 21}, {"file": "vllm/config/ec_manager_config.py", "line": 22}]
+    },
+    {
+      "constraint_id": "C020",
+      "type": "implication",
+      "expr": "ec_connector is not None → ec_role is not None",
+      "params": ["ec_connector", "ec_role"],
+      "violation_assignment": {"ec_transfer_config": {"ec_connector": "ECExampleConnector", "ec_role": null}},
+      "expected_error_kind": "ValueError",
+      "rationale": "给出 ec_connector 但 ec_role 为 None，ECTransferConfig.__post_init__ 在配置构造时抛 'Please specify ec_role when ec_connector is set'。",
+      "evidence_hint": [{"file": "vllm/config/ec_transfer.py", "line": 93}, {"file": "vllm/config/ec_transfer.py", "line": 94}]
+    },
+    {
+      "constraint_id": "C021",
+      "type": "enum",
+      "expr": "ec_role ∈ {ec_producer, ec_consumer, ec_both}",
+      "params": ["ec_role"],
+      "violation_assignment": {"ec_transfer_config": {"ec_connector": "ECExampleConnector", "ec_role": "___invalid___"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "ec_role 取域外值，ECTransferConfig 构造时先被字段类型（ECRole Literal）拦截、__post_init__ 也有 not in get_args(ECRole) 检查，均为 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/ec_transfer.py", "line": 87}, {"file": "vllm/config/ec_transfer.py", "line": 88}]
+    },
+    {
+      "constraint_id": "C022",
+      "type": "implication",
+      "expr": "(data_parallel_size > 1 and data_parallel_external_lb) implies model_config.is_moe",
+      "params": ["data_parallel_size", "data_parallel_external_lb", "model_config"],
+      "violation_assignment": {"data_parallel_size": 2, "data_parallel_external_lb": true, "data_parallel_rank": 0},
+      "expected_error_kind": "ValueError",
+      "rationale": "A 为真（dp_size=2 且 external_lb=True，rank=0 以满足前置的 rank 检查）而模型非 MoE 时 B 为假，create_engine_config 抛 'Non-MoE models do not support external data parallel mode'；实验需使用 dense 非 MoE 模型。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2229}, {"file": "vllm/engine/arg_utils.py", "line": 2234}]
+    },
+    {
+      "constraint_id": "C023",
+      "type": "range",
+      "expr": "0 <= node_rank < nnodes",
+      "params": ["node_rank", "nnodes"],
+      "violation_assignment": {"nnodes": 2, "node_rank": 2, "data_parallel_size": 2, "data_parallel_backend": "mp"},
+      "expected_error_kind": "ValueError",
+      "rationale": "nnodes=2 时 node_rank 必须落在 [0,2)，取 2 越界；world_size=2 可被 nnodes 整除，代码能走到 node_rank 检查并抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2197}, {"file": "vllm/engine/arg_utils.py", "line": 2198}]
+    },
+    {
+      "constraint_id": "C024",
+      "type": "enum",
+      "expr": "data_parallel_backend in {\"ray\", \"mp\"}",
+      "params": ["data_parallel_backend"],
+      "violation_assignment": {"data_parallel_backend": "___invalid___"},
+      "expected_error_kind": "AssertionError",
+      "rationale": "域外 backend 且 data_parallel_address 为 None 时，既不走 ray 分支，也会在 'can only be ray or mp' 的 assert 处失败（需保持 data_parallel_address 为 None）。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2320}, {"file": "vllm/engine/arg_utils.py", "line": 2321}]
+    },
+    {
+      "constraint_id": "C025",
+      "type": "implication",
+      "expr": "data_parallel_external_lb implies (data_parallel_rank is not None or (nnodes > 1 and data_parallel_size > 1))",
+      "params": ["data_parallel_external_lb", "data_parallel_rank", "nnodes", "data_parallel_size"],
+      "violation_assignment": {"data_parallel_external_lb": true, "data_parallel_rank": null, "nnodes": 1, "data_parallel_size": 1},
+      "expected_error_kind": "ValueError",
+      "rationale": "external_lb 为真但 rank 未给出且 nnodes=dp_size=1（无法推导），create_engine_config 抛 'requires a data-parallel rank'；dp_size=1 可避开 C022 的非 MoE 检查。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2241}, {"file": "vllm/engine/arg_utils.py", "line": 2242}]
+    },
+    {
+      "constraint_id": "C026",
+      "type": "implication",
+      "expr": "data_parallel_external_lb implies data_parallel_size_local in (1, None)",
+      "params": ["data_parallel_external_lb", "data_parallel_size_local"],
+      "violation_assignment": {"data_parallel_external_lb": true, "data_parallel_rank": 0, "data_parallel_size_local": 4},
+      "expected_error_kind": "ValueError",
+      "rationale": "external LB 下 data_parallel_size_local 只能为 1 或 None，给 4 会在 'requires --data-parallel-size-local 1' 处抛 ValueError（rank=0 用于满足 C025 前置）。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2249}, {"file": "vllm/engine/arg_utils.py", "line": 2250}]
+    },
+    {
+      "constraint_id": "C027",
+      "type": "implication",
+      "expr": "data_parallel_hybrid_lb implies data_parallel_size_local is not None",
+      "params": ["data_parallel_hybrid_lb", "data_parallel_size_local"],
+      "violation_assignment": {"data_parallel_hybrid_lb": true, "data_parallel_size_local": null},
+      "expected_error_kind": "ValueError",
+      "rationale": "hybrid LB 为真但 data_parallel_size_local 未设置（None），create_engine_config 在 'requires --data-parallel-size-local' 处抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2292}, {"file": "vllm/engine/arg_utils.py", "line": 2293}]
+    },
+    {
+      "constraint_id": "C028",
+      "type": "implication",
+      "expr": "data_parallel_hybrid_lb implies not headless",
+      "params": ["data_parallel_hybrid_lb", "headless"],
+      "violation_assignment": {"data_parallel_hybrid_lb": true, "headless": true},
+      "expected_error_kind": "AssertionError",
+      "rationale": "headless 不是 EngineArgs 字段，需以 EngineArgs(data_parallel_hybrid_lb=True).create_engine_config(headless=True) 调用；此时 'not headless or not data_parallel_hybrid_lb' 断言失败。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2163}]
+    },
+    {
+      "constraint_id": "C029",
+      "type": "implication",
+      "expr": "default_mm_loras is non-empty implies model_config is multimodal",
+      "params": ["default_mm_loras", "model_config"],
+      "violation_assignment": {"default_mm_loras": {"image": "dummy-org/dummy-lora"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "default_mm_loras 非空而模型非多模态时，create_engine_config 抛 'Default modality-specific LoRA(s) were provided for a non multimodal model'；实验需使用纯文本模型。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2452}, {"file": "vllm/engine/arg_utils.py", "line": 2453}]
+    },
+    {
+      "constraint_id": "C030",
+      "type": "implication",
+      "expr": "enable_fault_tolerance implies (data_parallel_external_lb or data_parallel_rank is not None)",
+      "params": ["enable_fault_tolerance", "data_parallel_external_lb", "data_parallel_rank"],
+      "violation_assignment": {"enable_fault_tolerance": true, "data_parallel_external_lb": false, "data_parallel_rank": null},
+      "expected_error_kind": "ValueError",
+      "rationale": "开启容错但既没有 external LB 也没有 data_parallel_rank（内部 LB 模式），create_engine_config 抛 'Fault tolerance requires external load balancer mode'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2223}, {"file": "vllm/engine/arg_utils.py", "line": 2224}]
+    },
+    {
+      "constraint_id": "C031",
+      "type": "inequality",
+      "expr": "enable_lora and speculative_config is not None implies max_num_batched_tokens >= max_num_seqs * (num_speculative_tokens + 1)",
+      "params": ["enable_lora", "speculative_config", "max_num_batched_tokens", "max_num_seqs", "num_speculative_tokens"],
+      "violation_assignment": {"enable_lora": true, "speculative_config": {"method": "ngram", "num_speculative_tokens": 5}, "max_num_batched_tokens": 16, "max_num_seqs": 16},
+      "expected_error_kind": "ValueError",
+      "rationale": "16 < 16 * (5+1) = 96，LoRA+投机解码的 token 预算检查在 create_engine_config 抛 'Consider increasing max_num_batched_tokens...'（ngram 无需 draft model）。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2478}, {"file": "vllm/engine/arg_utils.py", "line": 2487}]
+    },
+    {
+      "constraint_id": "C032",
+      "type": "implication",
+      "expr": "kda_prefill_backend == \"flashkda\" implies platform is CUDA",
+      "params": ["kda_prefill_backend"],
+      "violation_assignment": {"kda_prefill_backend": "flashkda"},
+      "expected_error_kind": "ValueError",
+      "rationale": "A 为真而平台非 CUDA（无 GPU 的 CPU 平台）时 B 为假，create_engine_config 抛 '--kda-prefill-backend=flashkda is only available on CUDA'；该用例在非 CUDA 环境可证伪，CUDA 环境不触发。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2633}, {"file": "vllm/engine/arg_utils.py", "line": 2636}]
+    },
+    {
+      "constraint_id": "C033",
+      "type": "implication",
+      "expr": "kda_prefill_backend == \"fused\" implies platform is ROCm",
+      "params": ["kda_prefill_backend"],
+      "violation_assignment": {"kda_prefill_backend": "fused"},
+      "expected_error_kind": "ValueError",
+      "rationale": "A 为真而平台非 ROCm（无 GPU 的 CPU 平台及 CUDA 均非 ROCm）时 B 为假，create_engine_config 抛 '--kda-prefill-backend=fused is only available on ROCm'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2639}, {"file": "vllm/engine/arg_utils.py", "line": 2640}]
+    },
+    {
+      "constraint_id": "C034",
+      "type": "inequality",
+      "expr": "max_num_batched_tokens >= max_num_seqs",
+      "params": ["max_num_batched_tokens", "max_num_seqs"],
+      "violation_assignment": {"max_num_batched_tokens": 16, "max_num_seqs": 32, "enable_chunked_prefill": true},
+      "expected_error_kind": "ValueError",
+      "rationale": "两值均显式给出（不会被 arg_utils 的 min 夹取），SchedulerConfig.__post_init__ → verify_max_model_len 抛 'max_num_batched_tokens must be greater than or equal to max_num_seqs'。",
+      "evidence_hint": [{"file": "vllm/config/scheduler.py", "line": 309}, {"file": "vllm/config/scheduler.py", "line": 310}]
+    },
+    {
+      "constraint_id": "C035",
+      "type": "arithmetic",
+      "expr": "nnodes > 1 implies (data_parallel_size * pipeline_parallel_size * tensor_parallel_size * prefill_context_parallel_size) % nnodes == 0",
+      "params": ["data_parallel_size", "pipeline_parallel_size", "tensor_parallel_size", "prefill_context_parallel_size", "nnodes"],
+      "violation_assignment": {"nnodes": 2, "data_parallel_backend": "mp", "data_parallel_size": 3},
+      "expected_error_kind": "ValueError",
+      "rationale": "world_size = DP3×PP1×TP1×PCP1 = 3，不能被 nnodes=2 整除，create_engine_config 抛 'must evenly divide the total world size'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2188}, {"file": "vllm/engine/arg_utils.py", "line": 2189}]
+    },
+    {
+      "constraint_id": "C036",
+      "type": "implication",
+      "expr": "nnodes > 1 implies data_parallel_backend == \"mp\"",
+      "params": ["nnodes", "data_parallel_backend"],
+      "violation_assignment": {"nnodes": 2, "data_parallel_backend": "ray"},
+      "expected_error_kind": "ValueError",
+      "rationale": "nnodes=2 但 DP backend 为 ray，create_engine_config 在 'requires --data-parallel-backend mp' 处抛 ValueError（该检查先于 C035 的整除检查）。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2173}, {"file": "vllm/engine/arg_utils.py", "line": 2174}]
+    },
+    {
+      "constraint_id": "C037",
+      "type": "mutual_exclusion",
+      "expr": "not (attention_backend is not None and attention_config.backend is not None)",
+      "params": ["attention_backend", "attention_config"],
+      "violation_assignment": {"attention_backend": "FLASH_ATTN", "attention_config": {"backend": "FLASHINFER"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "顶层 --attention-backend 与 --attention-config.backend 是同一字段的两种写法，同时非 None，create_engine_config 抛 'mutually exclusive'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2494}, {"file": "vllm/engine/arg_utils.py", "line": 2496}]
+    },
+    {
+      "constraint_id": "C038",
+      "type": "mutual_exclusion",
+      "expr": "not (cudagraph_capture_sizes is not None and compilation_config.cudagraph_capture_sizes is not None)",
+      "params": ["cudagraph_capture_sizes", "compilation_config"],
+      "violation_assignment": {"cudagraph_capture_sizes": [8], "compilation_config": {"cudagraph_capture_sizes": [16]}},
+      "expected_error_kind": "ValueError",
+      "rationale": "顶层与 compilation_config 内同时指定 cudagraph_capture_sizes，create_engine_config 抛 'mutually exclusive'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2598}, {"file": "vllm/engine/arg_utils.py", "line": 2600}]
+    },
+    {
+      "constraint_id": "C039",
+      "type": "mutual_exclusion",
+      "expr": "not (data_parallel_hybrid_lb and data_parallel_external_lb)",
+      "params": ["data_parallel_hybrid_lb", "data_parallel_external_lb"],
+      "violation_assignment": {"data_parallel_hybrid_lb": true, "data_parallel_external_lb": true},
+      "expected_error_kind": "ValueError",
+      "rationale": "hybrid LB 与完全 external LB 两种模式同时开启，create_engine_config 抛 'cannot be enabled together'（headless 默认 False，不会先触发 C028 断言）。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2166}, {"file": "vllm/engine/arg_utils.py", "line": 2167}]
+    },
+    {
+      "constraint_id": "C040",
+      "type": "mutual_exclusion",
+      "expr": "not (enable_flashinfer_autotune is not None and kernel_config.enable_flashinfer_autotune is not None)",
+      "params": ["enable_flashinfer_autotune", "kernel_config"],
+      "violation_assignment": {"enable_flashinfer_autotune": true, "kernel_config": {"enable_flashinfer_autotune": true}},
+      "expected_error_kind": "ValueError",
+      "rationale": "顶层开关与 KernelConfig.enable_flashinfer_autotune 同时非 None，create_engine_config 抛 'mutually exclusive'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2552}, {"file": "vllm/engine/arg_utils.py", "line": 2554}]
+    },
+    {
+      "constraint_id": "C041",
+      "type": "mutual_exclusion",
+      "expr": "not (max_cudagraph_capture_size is not None and compilation_config.max_cudagraph_capture_size is not None)",
+      "params": ["max_cudagraph_capture_size", "compilation_config"],
+      "violation_assignment": {"max_cudagraph_capture_size": 8, "compilation_config": {"max_cudagraph_capture_size": 8}},
+      "expected_error_kind": "ValueError",
+      "rationale": "顶层与 compilation_config 内同时指定 max_cudagraph_capture_size，create_engine_config 抛 'mutually exclusive'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2605}, {"file": "vllm/engine/arg_utils.py", "line": 2607}]
+    },
+    {
+      "constraint_id": "C042",
+      "type": "inequality",
+      "expr": "not enable_chunked_prefill implies max_num_batched_tokens >= max_model_len",
+      "params": ["enable_chunked_prefill", "max_num_batched_tokens", "max_model_len"],
+      "violation_assignment": {"enable_chunked_prefill": false, "max_num_batched_tokens": 16, "max_num_seqs": 16},
+      "expected_error_kind": "ValueError",
+      "rationale": "关闭 chunked prefill 且 max_num_batched_tokens=16 小于模型 max_model_len（显式给出两值可避免 arg_utils 自动抬高），SchedulerConfig.verify_max_model_len 抛 ValueError。",
+      "evidence_hint": [{"file": "vllm/config/scheduler.py", "line": 296}, {"file": "vllm/config/scheduler.py", "line": 300}]
+    },
+    {
+      "constraint_id": "C043",
+      "type": "mutual_exclusion",
+      "expr": "set(ir_op_priority set ops) intersection set(kernel_config.ir_op_priority set ops) == empty",
+      "params": ["ir_op_priority", "kernel_config"],
+      "violation_assignment": {"ir_op_priority": {"rms_norm": ["triton"]}, "kernel_config": {"ir_op_priority": {"rms_norm": ["flashinfer"]}}},
+      "expected_error_kind": "ValueError",
+      "rationale": "同一算子 rms_norm 在顶层 ir_op_priority 与 KernelConfig.ir_op_priority 两处同时设置，create_engine_config 抛 'only one allowed at a time'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 2574}, {"file": "vllm/engine/arg_utils.py", "line": 2575}]
+    },
+    {
+      "constraint_id": "C044",
+      "type": "mutual_exclusion",
+      "expr": "speculative_config is None or (spec_method is None and spec_model is None and spec_tokens is None)",
+      "params": ["speculative_config", "spec_method", "spec_model", "spec_tokens"],
+      "violation_assignment": {"speculative_config": {"method": "ngram", "num_speculative_tokens": 5}, "spec_method": "ngram"},
+      "expected_error_kind": "ValueError",
+      "rationale": "speculative_config 已包含 method 键，同时又给 --spec-method，create_speculative_config 抛 '--spec-method and --speculative-config[method] are mutually exclusive'。",
+      "evidence_hint": [{"file": "vllm/engine/arg_utils.py", "line": 1942}, {"file": "vllm/engine/arg_utils.py", "line": 1943}]
+    },
+    {
+      "constraint_id": "C045",
+      "type": "implication",
+      "expr": "dp_shared_memory → cpu_offload",
+      "params": ["dp_shared_memory", "cpu_offload"],
+      "violation_assignment": {"engram_config": {"dp_shared_memory": true, "cpu_offload": false}},
+      "expected_error_kind": "ValueError",
+      "rationale": "dp_shared_memory=True 而 cpu_offload=False，EngramConfig 的 model_validator(mode='after') 在 EngineArgs.__post_init__ 转换 dict 时抛 'dp_shared_memory requires cpu_offload=True'。",
+      "evidence_hint": [{"file": "vllm/config/engram.py", "line": 61}, {"file": "vllm/config/engram.py", "line": 62}]
+    },
+    {
+      "constraint_id": "C050",
+      "type": "implication",
+      "expr": "moe_backend ∈ {flashinfer_moe_ep_mega_deep_gemm, flashinfer_moe_ep_mega_cutedsl} → architectures ∩ {DeepseekV4ForCausalLM, DeepSeekV4MTPModel, DeepseekV41ForCausalLM} ≠ ∅",
+      "params": ["moe_backend", "architectures"],
+      "violation_assignment": {"moe_backend": "flashinfer_moe_ep_mega_deep_gemm"},
+      "expected_error_kind": "ValueError",
+      "rationale": "选用 flashinfer moe_ep 系列 backend 但模型架构不是 DeepSeek-V4 系，VllmConfig.__post_init__ → KernelConfig.set_platform_defaults 抛 'is only supported for DeepSeek-V4 models'；实验需使用非 DeepSeek-V4 模型。",
+      "evidence_hint": [{"file": "vllm/config/kernel.py", "line": 193}, {"file": "vllm/config/kernel.py", "line": 194}]
+    },
+    {
+      "constraint_id": "C051",
+      "type": "range",
+      "expr": "0 < kv_cache_metrics_sample <= 1.0",
+      "params": ["kv_cache_metrics_sample"],
+      "violation_assignment": {"kv_cache_metrics_sample": 0.0},
+      "expected_error_kind": "ValueError",
+      "rationale": "采样率 0.0 不满足 Field(gt=0, le=1)，create_observability_config 构造 ObservabilityConfig 时 pydantic 抛 ValidationError（ValueError 子类）；kv_cache_metrics.py 的运行期 assert 只是同一约束的二次校验。",
+      "evidence_hint": [{"file": "vllm/config/observability.py", "line": 65}]
+    },
+    {
+      "constraint_id": "C052",
+      "type": "range",
+      "expr": "0.0 <= watermark < 1.0",
+      "params": ["watermark"],
+      "violation_assignment": {"watermark": 1.5},
+      "expected_error_kind": "ValueError",
+      "rationale": "watermark=1.5 不满足 Field(ge=0.0, lt=1.0)，SchedulerConfig 构造时 pydantic 抛 ValidationError（ValueError 子类）。",
+      "evidence_hint": [{"file": "vllm/config/scheduler.py", "line": 178}]
+    },
+    {
+      "constraint_id": "C067",
+      "type": "implication",
+      "expr": "kv_connector is not None → kv_role is not None",
+      "params": ["kv_connector", "kv_role"],
+      "violation_assignment": {"kv_transfer_config": {"kv_connector": "NixlConnector", "kv_role": null}},
+      "expected_error_kind": "ValueError",
+      "rationale": "给出 kv_connector 但 kv_role 为 None，KVTransferConfig.__post_init__ 在 VllmConfig 构造（dict 被 pydantic 强转）时抛 'Please specify kv_role when kv_connector is set'。",
+      "evidence_hint": [{"file": "vllm/config/kv_transfer.py", "line": 136}, {"file": "vllm/config/kv_transfer.py", "line": 137}]
+    },
+    {
+      "constraint_id": "C068",
+      "type": "enum",
+      "expr": "kv_role ∈ {kv_producer, kv_consumer, kv_both}",
+      "params": ["kv_role"],
+      "violation_assignment": {"kv_transfer_config": {"kv_connector": "NixlConnector", "kv_role": "___invalid___"}},
+      "expected_error_kind": "ValueError",
+      "rationale": "kv_role 取域外值，KVTransferConfig 构造时被 KVRole Literal 类型校验拦截（pydantic ValidationError，ValueError 子类），__post_init__ 中也有同样的 not in get_args(KVRole) 检查。",
+      "evidence_hint": [{"file": "vllm/config/kv_transfer.py", "line": 130}, {"file": "vllm/config/kv_transfer.py", "line": 131}]
+    },
+    {
+      "constraint_id": "C069",
+      "type": "inequality",
+      "expr": "max_cpu_loras >= max_loras",
+      "params": ["max_cpu_loras", "max_loras"],
+      "violation_assignment": {"enable_lora": true, "max_loras": 4, "max_cpu_loras": 2},
+      "expected_error_kind": "ValueError",
+      "rationale": "CPU 槽位 2 < GPU 活跃槽位 4，LoRAConfig 的 model_validator（create_engine_config 中构造 LoRAConfig 时）抛 'max_cpu_loras must be >= max_loras'。",
+      "evidence_hint": [{"file": "vllm/config/lora.py", "line": 120}, {"file": "vllm/config/lora.py", "line": 121}]
+    },
+    {
+      "constraint_id": "C070",
+      "type": "implication",
+      "expr": "ssu_algorithm is not None → backend == flashinfer",
+      "params": ["ssu_algorithm", "backend"],
+      "violation_assignment": {"mamba_ssu_algorithm": "auto", "mamba_backend": "triton"},
+      "expected_error_kind": "ValueError",
+      "rationale": "ssu_algorithm 非 None 而 backend 为 triton，MambaConfig.validate_ssu_algorithm（由 __post_init__ 及 create_engine_config 显式调用）抛 'only supported with the FlashInfer backend'。",
+      "evidence_hint": [{"file": "vllm/config/mamba.py", "line": 76}, {"file": "vllm/config/mamba.py", "line": 77}]
+    },
+    {
+      "constraint_id": "C071",
+      "type": "enum",
+      "expr": "ssu_algorithm ∈ {auto, simple, vertical, horizontal}",
+      "params": ["ssu_algorithm"],
+      "violation_assignment": {"mamba_ssu_algorithm": "___invalid___"},
+      "expected_error_kind": "ValueError",
+      "rationale": "ssu_algorithm 取域外值，create_engine_config 赋值后调用 MambaConfig.validate_ssu_algorithm，在 valid_algorithms 检查处抛 'Unknown Mamba SSU algorithm'（该字段经由顶层 EngineArgs 传入，避开 pydantic 先行拦截）。",
+      "evidence_hint": [{"file": "vllm/config/mamba.py", "line": 70}, {"file": "vllm/config/mamba.py", "line": 72}]
+    }
+  ],
+  "skipped": [
+    {"constraint_id": "C004", "reason": "非稳定构造期路径：assert 位于 CompilationConfig.post_init_cudagraph_sizes()，仅由 VllmConfig.__post_init__ 中受 platform.support_static_graph_mode()（CUDA/ROCm/XPU）门控的 _set_cudagraph_sizes() 调用；无 GPU 环境不触发"},
+    {"constraint_id": "C007", "reason": "非构造期校验：resolve_cudagraph_mode_and_sizes 在 GPU model runner 运行期按实际 attention backend 的 CG 能力调用"},
+    {"constraint_id": "C010", "reason": "非构造期校验：is_custom_op_enabled() 是运行期方法（fusion/pass 决策时调用），不在任何 __post_init__ 中"},
+    {"constraint_id": "C011", "reason": "非稳定构造期路径：assert 位于 post_init_cudagraph_sizes()，仅由受 support_static_graph_mode() 门控的 _set_cudagraph_sizes() 调用；且两字段不一致时由 vllm.py:2380 的 ValueError 先于该 assert 触发，无 GPU 环境不可达"},
+    {"constraint_id": "C012", "reason": "非构造期校验：检查位于 resolve_cudagraph_mode_and_sizes，运行期调用且依赖 KV cache 实际块数与 Mamba 分组，并显式排除 profiling 阶段"},
+    {"constraint_id": "C015", "reason": "非构造期校验：adjust_cudagraph_sizes_for_spec_decode 仅在运行期 model runner（resolve_cudagraph_mode_and_sizes）中调用"},
+    {"constraint_id": "C016", "reason": "构造期校验但平台门控：set_splitting_ops_for_v1 只在 compilation mode == VLLM_COMPILE 时执行，CPU 平台会把 mode 强制改写为 DYNAMO_TRACE_ONCE，无 GPU 环境不触发"},
+    {"constraint_id": "C017", "reason": "非构造期校验：'No valid cudagraph sizes' 检查在运行期 adjust_cudagraph_sizes_for_spec_decode 内"},
+    {"constraint_id": "C018", "reason": "环境依赖：是否触发取决于已安装 torch 版本（torch>=2.9.0.dev 时不报错），无法用配置赋值可靠构造"},
+    {"constraint_id": "C046", "reason": "构造期校验但不可达：verify_parallel_config 仅在 _resolve_and_verify_engram_config 中 verify_model_config 通过后调用，后者要求 CUDA 平台且模型带 Engram 层（DeepseekV41ForCausalLM 等），无 GPU 环境到达前会先被 verify_model_config 拒绝"},
+    {"constraint_id": "C047", "reason": "构造期校验但不可达：verify_load_config 前置 verify_model_config 要求 CUDA 平台 + Engram 模型，无 GPU 环境无法到达目标校验点"},
+    {"constraint_id": "C048", "reason": "构造期校验但不可达：verify_parallel_config 前置 verify_model_config 要求 CUDA 平台 + Engram 模型，无 GPU 环境无法到达目标校验点"},
+    {"constraint_id": "C049", "reason": "构造期校验但不可达：verify_parallel_config 前置 verify_model_config 要求 CUDA 平台 + Engram 模型，无 GPU 环境无法到达目标校验点"},
+    {"constraint_id": "C053", "reason": "运行期/显存相关：auto-fit max_model_len 依赖真实 GPU 可用显存，在引擎初始化 profiling 阶段计算"},
+    {"constraint_id": "C054", "reason": "运行期/显存相关：KV cache 可用显存需在 worker 显存 profiling 后才能判定"},
+    {"constraint_id": "C055", "reason": "运行期校验：prefix 对齐检查在 KVCacheConfig/get_kv_cache_groups 组装时执行，依赖模型 KV spec"},
+    {"constraint_id": "C056", "reason": "运行期校验：kv_cache_coordinator 在引擎 core 初始化时构造并断言"},
+    {"constraint_id": "C057", "reason": "运行期校验：UnitaryKVCacheCoordinator 在引擎 core 初始化时断言 hash_block_size == block_size"},
+    {"constraint_id": "C058", "reason": "运行期校验：多模块 MTP + prefix caching 的 block_size 检查在 kv_cache_coordinator 初始化时执行"},
+    {"constraint_id": "C059", "reason": "运行期/显存相关：所需 KV 显存与可用显存比较在 worker 显存 profiling 后执行"},
+    {"constraint_id": "C060", "reason": "运行期/profiling：num_gpu_blocks 由显存 profiling 决定，非配置构造可赋值"},
+    {"constraint_id": "C061", "reason": "运行期校验：prefix_cache_retention_interval 对齐检查在 kv_cache_coordinator 初始化时执行"},
+    {"constraint_id": "C062", "reason": "运行期校验：retention 与 sliding-window/Mamba 分组的匹配检查在 kv_cache_coordinator 初始化时执行"},
+    {"constraint_id": "C063", "reason": "运行期校验：sink_len 断言在 single_type_kv_cache_manager 运行期构造时执行，依赖模型 KV spec"},
+    {"constraint_id": "C064", "reason": "运行期校验：resolve_kv_cache_block_sizes 在引擎 core 初始化（KVCacheConfig 组装）时执行"},
+    {"constraint_id": "C065", "reason": "运行期校验：chunked local attention 的块尺寸断言在 kv cache manager 运行期执行"},
+    {"constraint_id": "C066", "reason": "运行期校验：KV cache layout 检查在 KVCacheConfig 组装时执行，依赖平台/后端声明的布局"}
+  ]
+}

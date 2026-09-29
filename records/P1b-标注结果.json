@@ -1,0 +1,1754 @@
+{
+  "labels": {
+    "N_indices": [
+      21,
+      35,
+      37,
+      44,
+      48,
+      51,
+      52,
+      54,
+      59,
+      62,
+      65,
+      72,
+      76,
+      84,
+      86,
+      89,
+      90,
+      95,
+      96,
+      97,
+      98,
+      103,
+      104,
+      105,
+      106,
+      108,
+      109,
+      110,
+      111,
+      113,
+      118,
+      119,
+      121,
+      123,
+      124,
+      125,
+      127,
+      128,
+      129,
+      131,
+      133,
+      134,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      145,
+      146,
+      148,
+      149
+    ],
+    "default": "C"
+  },
+  "rows": [
+    {
+      "idx": 1,
+      "file": "vllm/config/vllm.py",
+      "line": 3205,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 2,
+      "file": "vllm/config/model.py",
+      "line": 1486,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C080"
+      ]
+    },
+    {
+      "idx": 3,
+      "file": "vllm/config/quantization.py",
+      "line": 50,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C157"
+      ]
+    },
+    {
+      "idx": 4,
+      "file": "vllm/config/parallel.py",
+      "line": 107,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C126"
+      ]
+    },
+    {
+      "idx": 5,
+      "file": "vllm/config/engram.py",
+      "line": 80,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 6,
+      "file": "vllm/config/compilation.py",
+      "line": 1280,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C016"
+      ]
+    },
+    {
+      "idx": 7,
+      "file": "vllm/config/compilation.py",
+      "line": 1373,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 8,
+      "file": "vllm/config/quantization.py",
+      "line": 153,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C153"
+      ]
+    },
+    {
+      "idx": 9,
+      "file": "vllm/config/parallel.py",
+      "line": 1023,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C120"
+      ]
+    },
+    {
+      "idx": 10,
+      "file": "vllm/config/parallel.py",
+      "line": 534,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C116"
+      ]
+    },
+    {
+      "idx": 11,
+      "file": "vllm/config/structured_outputs.py",
+      "line": 65,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C202"
+      ]
+    },
+    {
+      "idx": 12,
+      "file": "vllm/config/ec_transfer.py",
+      "line": 88,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C021"
+      ]
+    },
+    {
+      "idx": 13,
+      "file": "vllm/config/parallel.py",
+      "line": 105,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C127"
+      ]
+    },
+    {
+      "idx": 14,
+      "file": "vllm/config/vllm.py",
+      "line": 3250,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C239"
+      ]
+    },
+    {
+      "idx": 15,
+      "file": "vllm/config/model.py",
+      "line": 836,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C091"
+      ]
+    },
+    {
+      "idx": 16,
+      "file": "vllm/config/vllm.py",
+      "line": 1529,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 17,
+      "file": "vllm/config/speculative.py",
+      "line": 1809,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C191"
+      ]
+    },
+    {
+      "idx": 18,
+      "file": "vllm/config/profiler.py",
+      "line": 229,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C146"
+      ]
+    },
+    {
+      "idx": 19,
+      "file": "vllm/config/multimodal.py",
+      "line": 432,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C097"
+      ]
+    },
+    {
+      "idx": 20,
+      "file": "vllm/config/model.py",
+      "line": 1795,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C083"
+      ]
+    },
+    {
+      "idx": 21,
+      "file": "vllm/config/cache.py",
+      "line": 354,
+      "tier": 1,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 22,
+      "file": "vllm/config/engram.py",
+      "line": 108,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C047"
+      ]
+    },
+    {
+      "idx": 23,
+      "file": "vllm/config/parallel.py",
+      "line": 510,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C107"
+      ]
+    },
+    {
+      "idx": 24,
+      "file": "vllm/config/vllm.py",
+      "line": 2056,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 25,
+      "file": "vllm/config/speculative.py",
+      "line": 317,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C171"
+      ]
+    },
+    {
+      "idx": 26,
+      "file": "vllm/config/vllm.py",
+      "line": 1337,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C224"
+      ]
+    },
+    {
+      "idx": 27,
+      "file": "vllm/config/speculative.py",
+      "line": 1557,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C176"
+      ]
+    },
+    {
+      "idx": 28,
+      "file": "vllm/config/speculative.py",
+      "line": 1511,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C167"
+      ]
+    },
+    {
+      "idx": 29,
+      "file": "vllm/config/model.py",
+      "line": 949,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C077"
+      ]
+    },
+    {
+      "idx": 30,
+      "file": "vllm/config/speculative.py",
+      "line": 1598,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C194"
+      ]
+    },
+    {
+      "idx": 31,
+      "file": "vllm/config/compilation.py",
+      "line": 869,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 32,
+      "file": "vllm/config/reasoning.py",
+      "line": 119,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 33,
+      "file": "vllm/config/kv_transfer.py",
+      "line": 131,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C068"
+      ]
+    },
+    {
+      "idx": 34,
+      "file": "vllm/config/speculative.py",
+      "line": 159,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C182"
+      ]
+    },
+    {
+      "idx": 35,
+      "file": "vllm/config/compilation.py",
+      "line": 1265,
+      "tier": 1,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 36,
+      "file": "vllm/config/multimodal.py",
+      "line": 314,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C093"
+      ]
+    },
+    {
+      "idx": 37,
+      "file": "vllm/config/model.py",
+      "line": 1317,
+      "tier": 1,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 38,
+      "file": "vllm/config/speculative.py",
+      "line": 1521,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C175"
+      ]
+    },
+    {
+      "idx": 39,
+      "file": "vllm/config/vllm.py",
+      "line": 1412,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 40,
+      "file": "vllm/config/pooler.py",
+      "line": 137,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C141"
+      ]
+    },
+    {
+      "idx": 41,
+      "file": "vllm/config/ec_transfer.py",
+      "line": 94,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C020"
+      ]
+    },
+    {
+      "idx": 42,
+      "file": "vllm/config/pooler.py",
+      "line": 133,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C139"
+      ]
+    },
+    {
+      "idx": 43,
+      "file": "vllm/config/vllm.py",
+      "line": 3252,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 44,
+      "file": "vllm/config/compilation.py",
+      "line": 1112,
+      "tier": 1,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 45,
+      "file": "vllm/config/speculative.py",
+      "line": 1495,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C174"
+      ]
+    },
+    {
+      "idx": 46,
+      "file": "vllm/config/compilation.py",
+      "line": 1051,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 47,
+      "file": "vllm/config/vllm.py",
+      "line": 837,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 48,
+      "file": "vllm/config/utils.py",
+      "line": 257,
+      "tier": 1,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 49,
+      "file": "vllm/config/vllm.py",
+      "line": 3235,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 50,
+      "file": "vllm/config/vllm.py",
+      "line": 1424,
+      "tier": 1,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 51,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2419,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 52,
+      "file": "vllm/v1/engine/utils.py",
+      "line": 1336,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 53,
+      "file": "vllm/platforms/cuda.py",
+      "line": 473,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C133"
+      ]
+    },
+    {
+      "idx": 54,
+      "file": "vllm/v1/core/sched/scheduler.py",
+      "line": 1301,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 55,
+      "file": "vllm/platforms/rocm.py",
+      "line": 690,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 56,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 1943,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C044"
+      ]
+    },
+    {
+      "idx": 57,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2554,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C040"
+      ]
+    },
+    {
+      "idx": 58,
+      "file": "vllm/v1/core/kv_cache_utils.py",
+      "line": 776,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C064"
+      ]
+    },
+    {
+      "idx": 59,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2422,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 60,
+      "file": "vllm/v1/core/sched/scheduler.py",
+      "line": 393,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C162"
+      ]
+    },
+    {
+      "idx": 61,
+      "file": "vllm/v1/engine/utils.py",
+      "line": 1392,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C212"
+      ]
+    },
+    {
+      "idx": 62,
+      "file": "vllm/v1/engine/utils.py",
+      "line": 478,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 63,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2250,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C026"
+      ]
+    },
+    {
+      "idx": 64,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2636,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C032"
+      ]
+    },
+    {
+      "idx": 65,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2094,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 66,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2163,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C028"
+      ]
+    },
+    {
+      "idx": 67,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2453,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C029"
+      ]
+    },
+    {
+      "idx": 68,
+      "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+      "line": 1348,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C065"
+      ]
+    },
+    {
+      "idx": 69,
+      "file": "vllm/v1/core/kv_cache_utils.py",
+      "line": 1640,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C066"
+      ]
+    },
+    {
+      "idx": 70,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2190,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C035"
+      ]
+    },
+    {
+      "idx": 71,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2167,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C039"
+      ]
+    },
+    {
+      "idx": 72,
+      "file": "vllm/v1/core/sched/scheduler.py",
+      "line": 852,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 73,
+      "file": "vllm/v1/core/kv_cache_coordinator.py",
+      "line": 667,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C064"
+      ]
+    },
+    {
+      "idx": 74,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2224,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C030"
+      ]
+    },
+    {
+      "idx": 75,
+      "file": "vllm/v1/engine/input_processor.py",
+      "line": 119,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C220"
+      ]
+    },
+    {
+      "idx": 76,
+      "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+      "line": 2623,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 77,
+      "file": "vllm/v1/engine/input_processor.py",
+      "line": 471,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C217"
+      ]
+    },
+    {
+      "idx": 78,
+      "file": "vllm/v1/engine/core.py",
+      "line": 462,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C219"
+      ]
+    },
+    {
+      "idx": 79,
+      "file": "vllm/platforms/rocm.py",
+      "line": 640,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C135"
+      ]
+    },
+    {
+      "idx": 80,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2198,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C023"
+      ]
+    },
+    {
+      "idx": 81,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2575,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C043"
+      ]
+    },
+    {
+      "idx": 82,
+      "file": "vllm/v1/core/kv_cache_manager.py",
+      "line": 210,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C052"
+      ]
+    },
+    {
+      "idx": 83,
+      "file": "vllm/v1/core/sched/request_queue.py",
+      "line": 208,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C164"
+      ]
+    },
+    {
+      "idx": 84,
+      "file": "vllm/v1/core/kv_cache_utils.py",
+      "line": 1880,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 85,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2293,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C027"
+      ]
+    },
+    {
+      "idx": 86,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 402,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 87,
+      "file": "vllm/v1/core/kv_cache_utils.py",
+      "line": 879,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C054"
+      ]
+    },
+    {
+      "idx": 88,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2600,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C038"
+      ]
+    },
+    {
+      "idx": 89,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2986,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C034"
+      ]
+    },
+    {
+      "idx": 90,
+      "file": "vllm/v1/core/kv_cache_manager.py",
+      "line": 868,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 91,
+      "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+      "line": 2216,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C063"
+      ]
+    },
+    {
+      "idx": 92,
+      "file": "vllm/platforms/cuda.py",
+      "line": 502,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C134"
+      ]
+    },
+    {
+      "idx": 93,
+      "file": "vllm/v1/engine/input_processor.py",
+      "line": 481,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C218"
+      ]
+    },
+    {
+      "idx": 94,
+      "file": "vllm/v1/engine/utils.py",
+      "line": 656,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C204"
+      ]
+    },
+    {
+      "idx": 95,
+      "file": "vllm/platforms/xpu.py",
+      "line": 90,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 96,
+      "file": "vllm/engine/arg_utils.py",
+      "line": 2426,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 97,
+      "file": "vllm/v1/engine/core_client.py",
+      "line": 1763,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 98,
+      "file": "vllm/v1/engine/core.py",
+      "line": 858,
+      "tier": 2,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 99,
+      "file": "vllm/platforms/rocm.py",
+      "line": 929,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C137"
+      ]
+    },
+    {
+      "idx": 100,
+      "file": "vllm/v1/engine/core_client.py",
+      "line": 1731,
+      "tier": 2,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C216"
+      ]
+    },
+    {
+      "idx": 101,
+      "file": "vllm/model_executor/models/qwen3_next.py",
+      "line": 293,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C709"
+      ]
+    },
+    {
+      "idx": 102,
+      "file": "vllm/model_executor/models/lfm2.py",
+      "line": 118,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C452"
+      ]
+    },
+    {
+      "idx": 103,
+      "file": "vllm/v1/kv_offload/cpu/gpu_worker.py",
+      "line": 283,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 104,
+      "file": "vllm/models/inkling/amd/sconv_swa_attn.py",
+      "line": 177,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 105,
+      "file": "vllm/distributed/weight_transfer/nccl_common.py",
+      "line": 49,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 106,
+      "file": "vllm/models/qwen4_exp/amd/ops/qsa.py",
+      "line": 610,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 107,
+      "file": "vllm/device_allocator/sleep_mode_backend.py",
+      "line": 180,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C710"
+      ]
+    },
+    {
+      "idx": 108,
+      "file": "vllm/lora/ops/triton_ops/fused_moe_lora_fp8_op.py",
+      "line": 567,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 109,
+      "file": "vllm/v1/spec_decode/step3p5.py",
+      "line": 391,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 110,
+      "file": "vllm/models/deepseek_v4/nvidia/ops/sparse_attn_compress_cutedsl.py",
+      "line": 958,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 111,
+      "file": "vllm/models/qwen4_exp/common/qsa_cache.py",
+      "line": 86,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 112,
+      "file": "vllm/models/deepseek_v4/xpu/model.py",
+      "line": 605,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 113,
+      "file": "vllm/model_executor/models/keye.py",
+      "line": 1656,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 114,
+      "file": "vllm/model_executor/models/qwen2_moe.py",
+      "line": 217,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 115,
+      "file": "vllm/model_executor/models/qwen3_moe.py",
+      "line": 270,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C711"
+      ]
+    },
+    {
+      "idx": 116,
+      "file": "vllm/transformers_utils/config.py",
+      "line": 780,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C632"
+      ]
+    },
+    {
+      "idx": 117,
+      "file": "vllm/v1/attention/backends/mla/flashinfer_mla.py",
+      "line": 249,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C618"
+      ]
+    },
+    {
+      "idx": 118,
+      "file": "vllm/model_executor/layers/quantization/utils/fp8_utils.py",
+      "line": 1030,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 119,
+      "file": "vllm/model_executor/models/utils.py",
+      "line": 524,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 120,
+      "file": "vllm/sampling_params.py",
+      "line": 1177,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 121,
+      "file": "vllm/model_executor/layers/mamba/mamba_mixer2.py",
+      "line": 1196,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 122,
+      "file": "vllm/entrypoints/pooling/offline.py",
+      "line": 339,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": true,
+      "graph_ids": []
+    },
+    {
+      "idx": 123,
+      "file": "vllm/models/inkling/nvidia/ops/norm.py",
+      "line": 374,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 124,
+      "file": "vllm/model_executor/models/nemotron_vl.py",
+      "line": 571,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 125,
+      "file": "vllm/models/inkling/amd/mtp.py",
+      "line": 410,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 126,
+      "file": "vllm/model_executor/layers/attention/attention.py",
+      "line": 363,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C712"
+      ]
+    },
+    {
+      "idx": 127,
+      "file": "vllm/distributed/parallel_state.py",
+      "line": 806,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 128,
+      "file": "vllm/model_executor/models/nano_nemotron_vl.py",
+      "line": 625,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 129,
+      "file": "vllm/v1/attention/ops/xpu_mla_sparse.py",
+      "line": 200,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 130,
+      "file": "vllm/v1/spec_decode/dynamic/utils.py",
+      "line": 69,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C713"
+      ]
+    },
+    {
+      "idx": 131,
+      "file": "vllm/transformers_utils/processors/openvla.py",
+      "line": 31,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 132,
+      "file": "vllm/distributed/kv_transfer/kv_connector/factory.py",
+      "line": 127,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C297"
+      ]
+    },
+    {
+      "idx": 133,
+      "file": "vllm/model_executor/models/fireredasr2.py",
+      "line": 377,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C474"
+      ]
+    },
+    {
+      "idx": 134,
+      "file": "vllm/model_executor/models/qwen3_dflash.py",
+      "line": 811,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 135,
+      "file": "vllm/distributed/kv_transfer/kv_connector/factory.py",
+      "line": 51,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C714"
+      ]
+    },
+    {
+      "idx": 136,
+      "file": "vllm/model_executor/models/transformers/fusers/attention.py",
+      "line": 143,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 137,
+      "file": "vllm/models/qwen4_exp/nvidia/ops/hc.py",
+      "line": 60,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 138,
+      "file": "vllm/transformers_utils/processors/mimo_v2_omni.py",
+      "line": 369,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 139,
+      "file": "vllm/model_executor/models/transformers/multimodal.py",
+      "line": 832,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 140,
+      "file": "vllm/v1/structured_output/utils.py",
+      "line": 373,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 141,
+      "file": "vllm/models/dots3_note/common/video.py",
+      "line": 229,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 142,
+      "file": "vllm/models/inkling/nvidia/model.py",
+      "line": 561,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 143,
+      "file": "vllm/third_party/flash_linear_attention/ops/kda.py",
+      "line": 478,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 144,
+      "file": "vllm/model_executor/models/muse_glimmer.py",
+      "line": 1139,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 145,
+      "file": "vllm/model_executor/models/eagle2_5_vl.py",
+      "line": 153,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 146,
+      "file": "vllm/model_executor/models/transformers/pooling.py",
+      "line": 58,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 147,
+      "file": "vllm/model_executor/layers/quantization/modelopt.py",
+      "line": 362,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C715"
+      ]
+    },
+    {
+      "idx": 148,
+      "file": "vllm/models/kimi_k3/nvidia/ops/cute_dsl/latent_moe_tail/fused_add_multicast_skinny_gemm.py",
+      "line": 440,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 149,
+      "file": "vllm/model_executor/layers/quantization/modelopt.py",
+      "line": 1972,
+      "tier": 3,
+      "label": "N",
+      "captured_exact": false,
+      "captured_pm1": false,
+      "graph_ids": []
+    },
+    {
+      "idx": 150,
+      "file": "vllm/v1/worker/worker_base.py",
+      "line": 328,
+      "tier": 3,
+      "label": "C",
+      "captured_exact": true,
+      "captured_pm1": true,
+      "graph_ids": [
+        "C716"
+      ]
+    }
+  ],
+  "stats": {
+    "C": 96,
+    "N": 54,
+    "recall_exact": 0.8021,
+    "recall_pm1": 0.9479,
+    "N_sites_with_graph_constraint": 3,
+    "by_tier": {
+      "1": {
+        "total": 50,
+        "C": 45,
+        "N": 5,
+        "C_captured_exact": 32,
+        "C_captured_pm1": 42,
+        "N_with_graph_constraint": 0
+      },
+      "2": {
+        "total": 50,
+        "C": 34,
+        "N": 16,
+        "C_captured_exact": 33,
+        "C_captured_pm1": 34,
+        "N_with_graph_constraint": 1
+      },
+      "3": {
+        "total": 50,
+        "C": 17,
+        "N": 33,
+        "C_captured_exact": 12,
+        "C_captured_pm1": 15,
+        "N_with_graph_constraint": 2
+      }
+    }
+  }
+}

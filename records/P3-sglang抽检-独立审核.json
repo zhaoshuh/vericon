@@ -1,0 +1,24 @@
+{
+  "verdicts": {
+    "1": {"verdict": "correct", "reason": "host_pool 且非 decode 即报错，蕴含成立"},
+    "2": {"verdict": "correct", "reason": "XPU 上仅 auto/bfloat16 合法，其余报错"},
+    "3": {"verdict": "correct", "reason": "deepep+NVFP4 时报错，条件与消息吻合"},
+    "4": {"verdict": "correct", "reason": "取值集与 assert 列表完全一致（含 None）"},
+    "5": {"verdict": "correct", "reason": "NPU 下 PP>1 仅允许 EAGLE 非多层，一致"},
+    "6": {"verdict": "partially", "reason": "ROCm+DSv4 提前 return 跳过校验，漏此例外"},
+    "7": {"verdict": "correct", "reason": "缺 float4_e2m1fn_x2 即报错"},
+    "8": {"verdict": "correct", "reason": "多节点 DP 未开 dp-attention 即报错"},
+    "9": {"verdict": "correct", "reason": "TBO无EPa2a时要求dp-attention"},
+    "10": {"verdict": "correct", "reason": "sidecar 缺 grpc-port/该环境变量即报错"},
+    "21": {"verdict": "correct", "reason": "Llama4 非 CPU 时后端白名单与源码一致"},
+    "22": {"verdict": "correct", "reason": "prefill 允许集与源码完全一致"},
+    "23": {"verdict": "correct", "reason": "取值集与源码一致，NPU 强制 bfloat16"},
+    "24": {"verdict": "correct", "reason": "flashkda 不可作 decode 后端，源码一致"},
+    "25": {"verdict": "correct", "reason": "ep_join_mode 非 scale 时要求整除，一致"},
+    "26": {"verdict": "correct", "reason": "UNO 要求 TP=PP=1，与源码一致"},
+    "27": {"verdict": "correct", "reason": "开启即断言 tp_size==dp_size，一致"},
+    "28": {"verdict": "correct", "reason": "scattered sconv 下 hidden%tp==0"},
+    "29": {"verdict": "correct", "reason": "非 scale 分支断言 initial==tp_size"},
+    "30": {"verdict": "correct", "reason": "UNO 要求 num_draft_tokens 为正整数"}
+  }
+}

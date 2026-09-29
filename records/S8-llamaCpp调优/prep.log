@@ -1,0 +1,11 @@
+== 1) ctk=q8_0 + fa=off（预期失败）==
+rc=0
+
+== 2) ctk=q8_0 + fa=on（预期成功）==
+rc=0
+== 3) ctv=q8_0 + fa=off（对照，已知失败）==
+rc=1
+== 下载 1.5B 模型 ==
+try hf-mirror...
+size=1117320736
+-rw-r--r-- 1 administrator administrator 1117320736 Sep 29 04:30 qwen2.5-1.5b-instruct-q4_k_m.gguf

@@ -1,0 +1,138 @@
+{
+ "A": {
+  "trials": 100,
+  "ok": 100,
+  "invalid": 0,
+  "invalid_rate": 0.0,
+  "cost_mean": 20.0,
+  "cost_sd": 0.0,
+  "best_pp_median": 160.44,
+  "best_pp_best": 174.84,
+  "per_seed": {
+   "1": {
+    "cost": 20.0,
+    "best": 174.845,
+    "invalid": 0
+   },
+   "2": {
+    "cost": 20.0,
+    "best": 147.903,
+    "invalid": 0
+   },
+   "3": {
+    "cost": 20.0,
+    "best": 155.597,
+    "invalid": 0
+   },
+   "4": {
+    "cost": 20.0,
+    "best": 160.444,
+    "invalid": 0
+   },
+   "5": {
+    "cost": 20.0,
+    "best": 172.125,
+    "invalid": 0
+   }
+  },
+  "exp_fa_on": 0.68,
+  "exp_q8": 0.34,
+  "exp_ub_gt_b": 0.12,
+  "exp_ub_gt_b_n": 12
+ },
+ "M": {
+  "trials": 100,
+  "ok": 90,
+  "invalid": 10,
+  "invalid_rate": 0.1,
+  "cost_mean": 26.0,
+  "cost_sd": 3.674,
+  "best_pp_median": 148.64,
+  "best_pp_best": 164.25,
+  "per_seed": {
+   "1": {
+    "cost": 32.0,
+    "best": 138.695,
+    "invalid": 4
+   },
+   "2": {
+    "cost": 26.0,
+    "best": 148.644,
+    "invalid": 2
+   },
+   "3": {
+    "cost": 26.0,
+    "best": 147.655,
+    "invalid": 2
+   },
+   "4": {
+    "cost": 23.0,
+    "best": 156.989,
+    "invalid": 1
+   },
+   "5": {
+    "cost": 23.0,
+    "best": 164.249,
+    "invalid": 1
+   }
+  },
+  "exp_fa_on": 0.667,
+  "exp_q8": 0.278,
+  "exp_ub_gt_b": 0.0,
+  "exp_ub_gt_b_n": 0
+ },
+ "N": {
+  "trials": 100,
+  "ok": 90,
+  "invalid": 10,
+  "invalid_rate": 0.1,
+  "cost_mean": 26.0,
+  "cost_sd": 3.0,
+  "best_pp_median": 153.25,
+  "best_pp_best": 181.89,
+  "per_seed": {
+   "1": {
+    "cost": 29.0,
+    "best": 181.892,
+    "invalid": 3
+   },
+   "2": {
+    "cost": 26.0,
+    "best": 142.244,
+    "invalid": 2
+   },
+   "3": {
+    "cost": 23.0,
+    "best": 152.082,
+    "invalid": 1
+   },
+   "4": {
+    "cost": 23.0,
+    "best": 153.253,
+    "invalid": 1
+   },
+   "5": {
+    "cost": 29.0,
+    "best": 173.784,
+    "invalid": 3
+   }
+  },
+  "exp_fa_on": 0.722,
+  "exp_q8": 0.222,
+  "exp_ub_gt_b": 0.1,
+  "exp_ub_gt_b_n": 9
+ },
+ "trials_to_target_median": {
+  "A": 20,
+  "M": 21,
+  "N": 21
+ },
+ "comparisons": {
+  "A_vs_N_cost_reduction_pct": 23.1,
+  "A_vs_M_cost_reduction_pct": 23.1,
+  "M_vs_N_cost_reduction_pct": 0.0,
+  "invalid_rate_N": 0.1,
+  "invalid_rate_M": 0.1,
+  "invalid_rate_A": 0.0
+ }
+}

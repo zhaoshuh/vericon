@@ -1,0 +1,165 @@
+{
+  "cases": [
+    {
+      "constraint_id": "C113",
+      "type": "implication",
+      "expr": "async_scheduling=True 且 speculative_config 非空 → speculative_config.method ∈ EagleModelTypes ∪ NgramGPUTypes ∪ {'draft_model','dspark'}",
+      "params": ["async_scheduling", "method", "speculative_config"],
+      "violation_assignment": {
+        "async_scheduling": true,
+        "speculative_config": {"method": "ngram", "num_speculative_tokens": 5}
+      },
+      "expected_error_kind": "ValueError",
+      "rationale": "A 为真（async_scheduling=True 且 speculative_config 非空）而 B 为假：CPU 版 method='ngram' 不在允许集合内（NgramGPUTypes 仅为 {'ngram_gpu'}）。VllmConfig.__post_init__ 在构造期直接抛 ValueError（pydantic ValidationError）；该赋值与首轮 C227 同一校验点（vllm.py:1419-1424）且已被执行证实。",
+      "evidence_hint": [
+        {"file": "vllm/config/vllm.py", "line": 1419},
+        {"file": "vllm/config/vllm.py", "line": 1421},
+        {"file": "vllm/config/vllm.py", "line": 1424}
+      ]
+    },
+    {
+      "constraint_id": "C193",
+      "type": "enum",
+      "expr": "PoolerConfig 不再接受字段 'normalize'：传入即报错，应改用 use_activation",
+      "params": ["use_activation"],
+      "violation_assignment": {"normalize": true},
+      "expected_error_kind": "ValueError",
+      "rationale": "向 PoolerConfig 传入已移除的键 normalize（键级黑名单，取值无关即违反），@config 生成的 pydantic dataclass 在 model_validator(mode='before') 中检测到该键后立即抛 ValueError：'Parameter `normalize` was removed; use `use_activation` instead.'，构造期即拦截。",
+      "evidence_hint": [
+        {"file": "vllm/config/pooler.py", "line": 124},
+        {"file": "vllm/config/pooler.py", "line": 125},
+        {"file": "vllm/config/pooler.py", "line": 60}
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "constraint_id": "C033",
+      "reason": "环境依赖：是否抛错取决于运行环境能否导入 NIXL（parallel.py:900-908 调用 is_nixl_available()），非纯配置赋值可确定性触发（同首轮 C110 需显式 use_async=false 绕过该检查）。"
+    },
+    {
+      "constraint_id": "C050",
+      "reason": "非配置构造期：检查位于 platforms/interface.py:294 的平台类方法 device_id_to_physical_device_id，读取模块级 _assigned_physical_gpu_ids（运行期设备初始化时才设置）；无 GPU 环境不经过本地逻辑 ID→物理 ID 映射，配置赋值不可达。"
+    },
+    {
+      "constraint_id": "C101",
+      "reason": "构造期但不可达：NotImplementedError 分支（speculative.py:1369）位于 draft ModelConfig 成功加载之后（speculative.py:1269）且需要非空 target_model_config，执行环境无模型缓存/网络（同类含 model 字段用例均 blocked），无法用纯配置赋值触发。"
+    },
+    {
+      "constraint_id": "C106",
+      "reason": "环境依赖：需 current_platform.get_device_capability() 的真实 CUDA 算力并与 quant_config.get_min_capability() 比较，还需 get_quant_config 读取量化配置（vllm.py:828-842）；无 GPU 环境 capability 为 None，该检查整体跳过。"
+    },
+    {
+      "constraint_id": "C108",
+      "reason": "内部不变量断言：ModelConfig.__post_init__ 强制把 dtype 解析为 torch.dtype（model.py:752 调用 _get_and_verify_dtype），配置构造期不可能产生非 torch.dtype 值；且 assert 在 python -O 下被剥离。"
+    },
+    {
+      "constraint_id": "C109",
+      "reason": "同 C108：SP 阈值处的 dtype 断言（vllm.py:1694）验证的是 ModelConfig 已解析 dtype 的内部不变量，用户配置无法违反；-O 下剥离。"
+    },
+    {
+      "constraint_id": "C111",
+      "reason": "同 C108：allreduce-rms 阈值处的 dtype 断言（vllm.py:2447）为内部不变量（dtype 恒为 torch.dtype），非用户可触发的参数校验；-O 下剥离。"
+    },
+    {
+      "constraint_id": "C114",
+      "reason": "非构造期：校验在 CompilationConfig.resolve_cudagraph_mode_and_sizes（compilation.py:1382，raise 于 1491-1501），由 GPU model runner 运行期按实际 attention backend 的 CG 能力调用；同首轮 C007/C134 的跳过依据。"
+    },
+    {
+      "constraint_id": "C138",
+      "reason": "内部不变量：每个 optimization level 的默认表都显式设置 enable_flashinfer_autotune（vllm.py:276/299/322/345），_apply_optimization_level_defaults 之后不可能仍为 None（唯一途径是代码默认表缺失）；用户赋值无法触发 vllm.py:1624 的检查。"
+    },
+    {
+      "constraint_id": "C141",
+      "reason": "非构造期：init_backend 是运行期方法，仅由 compilation wrapper（compilation/wrapper.py:90）与 gpu_model_runner（v1/worker/gpu_model_runner.py:5448）在引擎启动时调用，配置构造期不可达。"
+    },
+    {
+      "constraint_id": "C143",
+      "reason": "内部流程断言不可达：mode 经枚举校验后，非 STOCK_TORCH_COMPILE/DYNAMO_TRACE_ONCE 分支必为 VLLM_COMPILE（compilation.py:1112），配置赋值无法构造反例；-O 下剥离。"
+    },
+    {
+      "constraint_id": "C145",
+      "reason": "需模型/checkpoint：dtype ∈ get_supported_act_dtypes() 的检查（vllm.py:843-848）依赖 get_quant_config 读取量化配置，且执行环境无法加载任何模型（含 model 用例均 blocked）；同首轮 C258 跳过依据。"
+    },
+    {
+      "constraint_id": "C184",
+      "reason": "平台能力聚合判定：执行环境为 CPU 平台，support_hybrid_kv_cache() 返回 True（platforms/cpu.py:587），其余置真条件需模型 attention_chunk_size+EAGLE 或特定 KV connector（vllm.py:1991-2033），无 GPU/模型/连接器时 need_disable 无法为真；同首轮 C270（同一校验点）跳过依据。"
+    },
+    {
+      "constraint_id": "C187",
+      "reason": "非构造期：同 C141，init_backend 仅在引擎启动路径被调用；mode=None 的前置检查（compilation.py:1092）在配置构造期不执行。"
+    },
+    {
+      "constraint_id": "C199",
+      "reason": "环境依赖：仅当平台无法报告 device_type（current_platform.device_type 为空）时才 RuntimeError（device.py:54-60）；CPU 平台返回 'cpu'，无法用配置赋值构造空值。"
+    },
+    {
+      "constraint_id": "C210",
+      "reason": "环境依赖/需 GPU：先要求 CUDA 平台，再判定 is_device_capability_family(100)（mamba.py:85-103）；无 GPU 环境会先命中 CUDA-only 分支，无法隔离目标校验（同首轮 C255）。"
+    },
+    {
+      "constraint_id": "C223",
+      "reason": "环境依赖：触发取决于运行环境是否安装/可导入 OpenTelemetry（observability.py:146 → tracing/__init__.py:148，唯一注册后端为 otel，即 is_otel_available），非纯配置构造。"
+    },
+    {
+      "constraint_id": "C238",
+      "reason": "构造期但不可达：verify_model_config（engram.py:65-83）要求模型架构在 _NGRAM_LAYER_FIELDS、hf_text_config 对应字段非空且平台为 CUDA，依赖模型派生属性与平台探测；执行环境无 GPU/模型，同首轮 C257/C046 跳过依据。"
+    },
+    {
+      "constraint_id": "C239",
+      "reason": "非构造期：get_resolved_kv_cache_layout 是读取时机守卫（cache.py:352-358），调用点全在运行期（kv_cache_utils/attention backend/worker），且 kv_cache_layout 为 init=False 字段，用户赋值不可达。"
+    },
+    {
+      "constraint_id": "C240",
+      "reason": "非构造期：get_seq_pooling_type 的解析前置守卫（pooler.py:162-168），仅由 model executor 池化层运行期调用（model_executor/layers/pooler/seqwise/poolers.py:99/120），构造函数不触发。"
+    },
+    {
+      "constraint_id": "C241",
+      "reason": "非构造期：get_tok_pooling_type 的解析前置守卫（pooler.py:170-176），仅由 model executor 池化层运行期调用（model_executor/layers/pooler/tokwise/poolers.py:104/127），构造函数不触发。"
+    },
+    {
+      "constraint_id": "C244",
+      "reason": "请求期校验：routed_experts_prompt_start 范围检查在 input_processor 处理请求时执行（v1/engine/input_processor.py:360-366），需引擎实例与真实请求，非配置构造期。"
+    },
+    {
+      "constraint_id": "C246",
+      "reason": "运行期 API：EngineCore.pause_scheduler 的方法参数校验（v1/engine/core.py:857-860），需已启动的引擎实例，非配置构造期。"
+    },
+    {
+      "constraint_id": "C248",
+      "reason": "运行期 API：InprocClient.sleep 的方法参数校验（v1/engine/core_client.py:396-398），需已启动的引擎实例，非配置构造期。"
+    },
+    {
+      "constraint_id": "C249",
+      "reason": "请求期校验：LLMEngine.add_request 的 request_id 类型检查（v1/engine/llm_engine.py:237-238），需引擎实例与请求，非配置构造期（同首轮 C215 类别）。"
+    },
+    {
+      "constraint_id": "C262",
+      "reason": "自动改写型软约束：create_engine_config 只记 warning 并自动改写 data_parallel_hybrid_lb=False（arg_utils.py:2266-2274），无报错路径，无法构造'违反'赋值。"
+    },
+    {
+      "constraint_id": "C263",
+      "reason": "自动改写型软约束：单节点场景同样直接改写 data_parallel_hybrid_lb=False（arg_utils.py:2276-2278），无报错路径。"
+    },
+    {
+      "constraint_id": "C272",
+      "reason": "请求期校验：mm_hashes 叶子必须为 str 的检查在 input_processor 处理多模态请求时执行（v1/engine/input_processor.py:392-399），属请求期/多模态 processor 产物校验，非配置构造期。"
+    },
+    {
+      "constraint_id": "C276",
+      "reason": "运行期断言：MPClient 初始化时 data_parallel_size_local ≤ len(engine_ranks_managed) 检查（v1/engine/core_client.py:700-702），需 DP 引擎进程与连接建立，非配置构造期（同首轮 C214 类别）。"
+    },
+    {
+      "constraint_id": "C277",
+      "reason": "请求期校验：params 必须是 SamplingParams/PoolingParams 的检查在 input_processor._validate_params（v1/engine/input_processor.py:156-159），需引擎实例与请求，非配置构造期。"
+    },
+    {
+      "constraint_id": "C279",
+      "reason": "请求期校验：EngineCore.add_request 的 request_id 类型检查（v1/engine/core.py:451-454），需引擎实例与请求，非配置构造期（同首轮 C215 类别）。"
+    },
+    {
+      "constraint_id": "C285",
+      "reason": "运行期断言：DPEngineCoreProc.__init__ 的 vllm_config.model_config.is_moe 断言（v1/engine/core.py:2010-2012），需启动 DP 引擎子进程且需 MoE 模型，无法用纯配置赋值在构造期触发。"
+    }
+  ]
+}
